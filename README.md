@@ -1,21 +1,19 @@
-# ✈️ Aviação Civil Brasileira — Dashboard de Análise (VRA / ANAC 2024)
+# Aviação Civil Brasileira: dashboard de análise (VRA / ANAC 2024)
 
-Projeto final da disciplina de **Estudos Avançados de Banco de Dados**
-(Prof. José Guilherme Picolo): um *pipeline* completo de Ciência de Dados em
-Python + um **dashboard interativo em Dash**, analisando **~988 mil voos
-regulares** registrados pela ANAC ao longo de **2024**.
+Projeto final da disciplina de Estudos Avançados de Banco de Dados (Prof. José
+Guilherme Picolo). É um pipeline completo de Ciência de Dados em Python com um
+dashboard interativo em Dash, sobre cerca de 988 mil voos regulares registrados
+pela ANAC durante o ano de 2024.
 
-> **Pergunta que guia o estudo:** quem voa no Brasil, quando voa e onde estão os
-> gargalos de pontualidade da aviação comercial?
+A pergunta que guia o trabalho: quem voa no Brasil, quando voa e onde estão os
+gargalos de pontualidade da aviação comercial?
 
-![Dashboard 1 — Visão Geral](figuras/dashboard1_visao_geral.png)
+![Dashboard 1: Visão Geral](figuras/dashboard1_visao_geral.png)
 
----
+## Integrantes
 
-## 👥 Integrantes
-
-**Disciplina:** Estudos Avançados de Banco de Dados — **Prof.** José Guilherme Picolo
-**Instituição:** PUC-Campinas
+Disciplina: Estudos Avançados de Banco de Dados. Professor: José Guilherme
+Picolo. PUC-Campinas, Curso de Engenharia de Software.
 
 | Nome | RA |
 |---|---|
@@ -25,38 +23,37 @@ regulares** registrados pela ANAC ao longo de **2024**.
 | João Celso | 24012463 |
 | Pedro Tiezo Sales Shimizu | 24005158 |
 
----
-
-## 🎯 O que o projeto entrega
+## O que o projeto entrega
 
 | Etapa do pipeline | Onde está |
 |---|---|
-| **1. Aquisição** (leitura com Pandas + crawler de coleta automática) | `src/crawler.py` |
-| **2. Integração** (concatenação dos 12 meses + *merge* das dimensões) | `src/preprocessing.py` |
-| **3. Limpeza** (nulos, duplicatas, inconsistências, padronização) | `src/preprocessing.py` |
-| **4. Transformação** (novas variáveis, agregações) | `src/preprocessing.py` |
-| **5. Análise exploratória** (estatística + matplotlib + insights) | `src/analise_exploratoria.py` |
-| **Dashboards** (2 painéis interativos em Dash) | `src/app.py` |
+| 1. Aquisição (leitura com Pandas e crawler de coleta automática) | `src/crawler.py` |
+| 2. Integração (concatenação dos 12 meses e merge das dimensões) | `src/preprocessing.py` |
+| 3. Limpeza (nulos, duplicatas, inconsistências, padronização) | `src/preprocessing.py` |
+| 4. Transformação (novas variáveis e agregações) | `src/preprocessing.py` |
+| 5. Análise exploratória (estatística, matplotlib e insights) | `src/analise_exploratoria.py` |
+| Dashboards (dois painéis interativos em Dash) | `src/app.py` |
 
----
+A apresentação do trabalho em slides está em `apresentacao.pdf`, e o relatório
+escrito em [RELATORIO.md](RELATORIO.md).
 
-## 📊 Fontes de dados
+## Fonte dos dados
 
-São **três fontes públicas**, integradas por operações de *merge* e *concat*
-(atende o requisito de **≥ 2 arquivos distintos** e **≥ 10.000 registros**):
+São três fontes públicas, integradas por operações de merge e concat. Isso já
+cobre o requisito de pelo menos dois arquivos distintos e mais de 10.000
+registros:
 
 | Fonte | Arquivos | Papel | Registros |
 |---|---|---|---|
-| **VRA — Voo Regular Ativo (ANAC)** | 12 CSVs mensais (`VRA_2024_01..12.csv`) | Tabela-fato (voos) | **~988 mil** |
-| **OurAirports** | `airports.csv` | Dimensão de aeroportos (cidade, UF, região, lat/lon) | ~80 mil |
-| **Companhias aéreas** (curada a partir de ANAC/OpenFlights) | `dim_companhias.csv` | Dimensão de companhias (nome, país, grupo) | 62 |
+| VRA, Voo Regular Ativo (ANAC) | 12 CSVs mensais (`VRA_2024_01..12.csv`) | tabela-fato (voos) | ~988 mil |
+| OurAirports | `airports.csv` | dimensão de aeroportos (cidade, UF, região, lat/lon) | ~80 mil |
+| Companhias aéreas (a partir de ANAC e OpenFlights) | `dim_companhias.csv` | dimensão de companhias (nome, país, grupo) | 62 |
 
-Cada arquivo mensal do VRA já tem **~85 mil voos** — um único mês supera o
-mínimo de 10.000 registros, e o ano inteiro chega a quase **1 milhão**.
+Um único arquivo mensal do VRA já traz cerca de 85 mil voos, então um mês
+sozinho supera o mínimo de 10.000 registros, e o ano inteiro chega perto de um
+milhão.
 
----
-
-## 🚀 Como executar
+## Como executar
 
 ```bash
 # 1. Criar o ambiente e instalar dependências
@@ -64,10 +61,10 @@ python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-# 2. Coletar os dados brutos automaticamente (BÔNUS: crawler)
-python src/crawler.py              # baixa 12 meses do VRA + aeroportos
+# 2. Coletar os dados brutos automaticamente (o crawler vale o ponto de bônus)
+python src/crawler.py              # baixa 12 meses do VRA e os aeroportos
 
-# 3. Rodar o pipeline (integração + limpeza + transformação)
+# 3. Rodar o pipeline (integração, limpeza e transformação)
 python src/preprocessing.py        # gera data/processed/voos.parquet
 
 # 4. (Opcional) Análise exploratória com matplotlib
@@ -77,74 +74,66 @@ python src/analise_exploratoria.py # gera as figuras em figuras/
 python src/app.py                  # abrir http://127.0.0.1:8050
 ```
 
-> Os dados brutos já acompanham o repositório em `data/raw/`. Se quiser regerar
-> do zero, basta rodar o passo 2 (o crawler pula arquivos já baixados).
+Os dados brutos já acompanham o repositório em `data/raw/`. Para regerar do zero,
+basta rodar o passo 2 (o crawler pula arquivos que já existem).
 
----
-
-## 🗂️ Estrutura do projeto
+## Estrutura do projeto
 
 ```
 trabalhopicolofinal/
 ├── src/
-│   ├── crawler.py              # coleta automática (BÔNUS +1 ponto)
-│   ├── preprocessing.py        # pipeline: concat + merge + limpeza + transformação
-│   ├── analise_exploratoria.py # EDA com matplotlib/seaborn + insights
-│   └── app.py                  # dashboard Dash (2 painéis)
+│   ├── crawler.py              # coleta automática (bônus)
+│   ├── preprocessing.py        # pipeline: concat, merge, limpeza, transformação
+│   ├── analise_exploratoria.py # EDA com matplotlib/seaborn e insights
+│   └── app.py                  # dashboard Dash (dois painéis)
 ├── data/
 │   ├── raw/                    # dados brutos (VRA mensal, aeroportos, companhias)
-│   └── processed/              # base limpa (voos.parquet + amostra)
+│   └── processed/              # base limpa (voos.parquet e amostra)
 ├── assets/style.css            # estilo do dashboard
-├── figuras/                    # gráficos da EDA + screenshots dos dashboards
-├── RELATORIO.md                # relatório/apresentação do pipeline e insights
+├── figuras/                    # gráficos da EDA e screenshots dos dashboards
+├── apresentacao.pdf            # apresentação em slides
+├── RELATORIO.md                # relatório escrito do pipeline e dos insights
 ├── requirements.txt
 └── README.md
 ```
 
----
+## Os dois dashboards
 
-## 🧭 Os dois dashboards
+Dashboard 1, Visão Geral: um painel executivo com os indicadores-chave e quatro
+gráficos sintéticos, para entender o panorama em uma olhada (volume, mercado,
+pontualidade e principais hubs).
 
-**Dashboard 1 — Visão Geral (painel executivo):** indicadores-chave + 4 gráficos
-sintéticos que resumem a história principal em uma olhada (volume, mercado,
-pontualidade, hubs).
+Dashboard 2, Exploração Interativa: quatro filtros (grupo/companhia, tipo de
+voo, região e período) e sete visualizações de tipos diferentes (linha, barras,
+heatmap, dispersão, pizza e mapa). Os gráficos reagem juntos aos filtros.
 
-**Dashboard 2 — Exploração Interativa:** **4 filtros** (grupo/companhia, tipo de
-voo, região e período) e **7 visualizações** de tipos diferentes (linha, barras,
-*heatmap*, dispersão, pizza e mapa geográfico) que reagem em conjunto.
+![Dashboard 2: Exploração Interativa](figuras/dashboard2_exploracao.png)
 
-![Dashboard 2 — Exploração Interativa](figuras/dashboard2_exploracao.png)
+## Principais insights
 
----
+1. Azul, LATAM e Gol concentram cerca de 95% do mercado doméstico.
+2. A Azul é a maior em volume, mas a menos pontual das três, porque voa para
+   mais aeroportos regionais.
+3. Os atrasos crescem ao longo do dia (efeito cascata): a manhã é pontual e o
+   fim de tarde é o pior momento, com pico nas sextas-feiras.
+4. Voos internacionais atrasam mais (22,5%) que os domésticos (15,8%).
+5. A movimentação se concentra no Sudeste, e poucos hubs respondem pela maior
+   parte dos voos.
 
-## 💡 Principais insights (resumo)
+A análise completa, com gráficos e interpretação, está em
+[RELATORIO.md](RELATORIO.md) e nos slides em `apresentacao.pdf`.
 
-1. **Oligopólio:** Azul, LATAM e Gol concentram **~95%** do mercado doméstico.
-2. **Azul é a maior, mas a menos pontual** das três — reflexo de voar mais
-   aeroportos regionais.
-3. **Atrasos se acumulam ao longo do dia** (efeito cascata): manhãs pontuais,
-   fim de tarde/noite é o pior momento — pior ainda às **sextas-feiras**.
-4. **Internacionais atrasam mais** (22,5%) que **domésticos** (15,8%).
-5. **Sudeste concentra** a maior parte da movimentação; poucos hubs respondem
-   pela maioria dos voos.
+## Atendimento aos requisitos
 
-> A análise completa, com gráficos e interpretação, está em **[RELATORIO.md](RELATORIO.md)**.
-
----
-
-## ✅ Atendimento aos requisitos
-
-- [x] Dataset público com **≥ 10.000 registros** (~988 mil voos)
-- [x] **≥ 2 arquivos distintos** (12 CSVs do VRA + aeroportos + companhias)
-- [x] Aquisição com Pandas **+ crawler de coleta automática (bônus)**
-- [x] Integração por **concat** (meses) e **merge** (dimensões)
-- [x] Limpeza: nulos, duplicatas, inconsistências, padronização
+- [x] Dataset público com mais de 10.000 registros (~988 mil voos)
+- [x] Pelo menos dois arquivos distintos (12 CSVs do VRA, aeroportos e companhias)
+- [x] Aquisição com Pandas e crawler de coleta automática (bônus)
+- [x] Integração por concat (meses) e merge (dimensões)
+- [x] Limpeza: nulos, duplicatas, inconsistências e padronização
 - [x] Transformação: novas variáveis (atraso, atrasado, rota, distância, recortes temporais)
-- [x] EDA com estatística + gráficos **e insights interpretados**
-- [x] **Dashboard 1** (visão geral / executivo)
-- [x] **Dashboard 2** (≥ 5 visualizações, ≥ 2 filtros, comparações, seleção de categorias)
-- [x] Boas práticas de comunicação visual (*Storytelling with Data*)
+- [x] EDA com estatística, gráficos e insights interpretados
+- [x] Dashboard 1 (visão geral / executivo)
+- [x] Dashboard 2 (sete visualizações, quatro filtros, comparações, seleção de categorias)
+- [x] Boas práticas de comunicação visual (baseadas em Storytelling with Data)
 
----
-
-*Stack: Python · Pandas · NumPy · Matplotlib · Seaborn · Dash · Plotly*
+Stack: Python, Pandas, NumPy, Matplotlib, Seaborn, Dash e Plotly.

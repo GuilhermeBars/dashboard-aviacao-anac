@@ -158,7 +158,7 @@ def fig_evolucao_mensal() -> go.Figure:
                        showarrow=True, arrowhead=2, ay=-35,
                        font=dict(color=COR_DESTAQUE))
     fig.update_yaxes(rangemode="tozero", tickformat=",")
-    return estilizar(fig, "Volume de voos por mês — sazonalidade ao longo de 2024")
+    return estilizar(fig, "Volume de voos por mês: sazonalidade ao longo de 2024")
 
 
 def fig_market_share() -> go.Figure:
@@ -205,7 +205,7 @@ def fig_top_aeroportos() -> go.Figure:
 def layout_visao_geral() -> html.Div:
     return html.Div(className="aba", children=[
         html.Div(className="aba-header", children=[
-            html.H2("Panorama da Aviação Civil Brasileira — 2024"),
+            html.H2("Panorama da Aviação Civil Brasileira em 2024"),
             html.P("Visão executiva de ~1 milhão de voos regulares registrados "
                    "pela ANAC. Em uma olhada: quem voa, quando voa e onde "
                    "estão os gargalos de pontualidade."),
@@ -223,8 +223,8 @@ def layout_visao_geral() -> html.Div:
             html.B("Leitura rápida: "),
             "três companhias (Gol, Azul e LATAM) concentram a quase totalidade "
             "do mercado doméstico; o volume tem picos sazonais (férias e fim de "
-            "ano); e há diferença clara de pontualidade entre as grandes — "
-            "explore os detalhes na aba ao lado.",
+            "ano); e há diferença clara de pontualidade entre as grandes. "
+            "Explore os detalhes na aba ao lado.",
         ]),
     ])
 
@@ -297,25 +297,25 @@ def layout_exploracao() -> html.Div:
 # App
 # ---------------------------------------------------------------------------
 
-app = Dash(__name__, title="Aviação Brasil 2024 — ANAC",
+app = Dash(__name__, title="Aviação Brasil 2024 (ANAC)",
            assets_folder=str((RAIZ / "assets").resolve()))
 server = app.server
 
 app.layout = html.Div(children=[
     html.Div(className="topo", children=[
-        html.H1("✈️  Aviação Civil Brasileira — Análise do VRA 2024"),
-        html.Span("Fonte: ANAC (Voo Regular Ativo) • OurAirports • dados abertos",
+        html.H1("Aviação Civil Brasileira: análise do VRA 2024"),
+        html.Span("Fonte: ANAC (Voo Regular Ativo), OurAirports, dados abertos",
                   className="topo-sub"),
     ]),
     dcc.Tabs(id="abas", value="visao", className="abas", children=[
-        dcc.Tab(label="📊 Dashboard 1 — Visão Geral", value="visao",
+        dcc.Tab(label="Dashboard 1: Visão Geral", value="visao",
                 className="tab", selected_className="tab-sel"),
-        dcc.Tab(label="🔎 Dashboard 2 — Exploração Interativa", value="explora",
+        dcc.Tab(label="Dashboard 2: Exploração Interativa", value="explora",
                 className="tab", selected_className="tab-sel"),
     ]),
     html.Div(id="conteudo-aba"),
     html.Div(className="creditos",
-             children="Projeto Final — Análise de Dados • Dash + Plotly + Pandas"),
+             children="Projeto final · Estudos Avançados de Banco de Dados · Dash, Plotly e Pandas"),
 ])
 
 
