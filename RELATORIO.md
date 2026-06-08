@@ -1,9 +1,21 @@
 # ✈️ Aviação Civil Brasileira em 2024
-### Relatório do Projeto Final — Análise de Dados (Pipeline + Dashboard)
+### Relatório do Projeto Final — Estudos Avançados de Banco de Dados (Pipeline + Dashboard)
 
 > **Fonte principal:** ANAC — Voo Regular Ativo (VRA), ano de 2024
 > **Volume analisado:** ~988 mil voos regulares · 62 companhias · 385 aeroportos
 > **Ferramentas:** Python · Pandas · Matplotlib · Dash · Plotly
+
+**Disciplina:** Estudos Avançados de Banco de Dados · **Professor:** José Guilherme Picolo · **PUC-Campinas**
+
+**Integrantes:**
+
+| Nome | RA |
+|---|---|
+| Felipe Cosmo Granziol | 24021602 |
+| Guilherme Bars | 24014122 |
+| Gustavo Kurten | *(a confirmar)* |
+| João Celso | 24012463 |
+| Pedro Tiezo Sales Shimizu | 24005158 |
 
 ---
 

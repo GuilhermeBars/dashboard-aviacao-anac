@@ -1,13 +1,29 @@
 # ✈️ Aviação Civil Brasileira — Dashboard de Análise (VRA / ANAC 2024)
 
-Projeto final da disciplina de **Análise de Dados**: um *pipeline* completo de
-Ciência de Dados em Python + um **dashboard interativo em Dash**, analisando
-**~988 mil voos regulares** registrados pela ANAC ao longo de **2024**.
+Projeto final da disciplina de **Estudos Avançados de Banco de Dados**
+(Prof. José Guilherme Picolo): um *pipeline* completo de Ciência de Dados em
+Python + um **dashboard interativo em Dash**, analisando **~988 mil voos
+regulares** registrados pela ANAC ao longo de **2024**.
 
 > **Pergunta que guia o estudo:** quem voa no Brasil, quando voa e onde estão os
 > gargalos de pontualidade da aviação comercial?
 
 ![Dashboard 1 — Visão Geral](figuras/dashboard1_visao_geral.png)
+
+---
+
+## 👥 Integrantes
+
+**Disciplina:** Estudos Avançados de Banco de Dados — **Prof.** José Guilherme Picolo
+**Instituição:** PUC-Campinas
+
+| Nome | RA |
+|---|---|
+| Felipe Cosmo Granziol | 24021602 |
+| Guilherme Bars | 24014122 |
+| Gustavo Kurten | *(a confirmar)* |
+| João Celso | 24012463 |
+| Pedro Tiezo Sales Shimizu | 24005158 |
 
 ---
 
