@@ -21,7 +21,7 @@ regulares** registrados pela ANAC ao longo de **2024**.
 |---|---|
 | Felipe Cosmo Granziol | 24021602 |
 | Guilherme Bars | 24014122 |
-| Gustavo Kurten | *(a confirmar)* |
+| Gustavo Kurten | 24008150 |
 | João Celso | 24012463 |
 | Pedro Tiezo Sales Shimizu | 24005158 |
 
