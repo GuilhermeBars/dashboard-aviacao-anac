@@ -29,7 +29,14 @@ with sync_playwright() as p:
     # ---- Dashboard 2 (clica na aba) ----
     page.click("text=Exploração Interativa")
     esperar_graficos(page, 7)            # 7 visualizações
-    page.wait_for_timeout(1500)
+    # o mapa geográfico baixa o topojson (mapa-base) de forma assíncrona:
+    # espera a rede ficar ociosa e o <path class="land"> aparecer
+    page.wait_for_load_state("networkidle")
+    try:
+        page.wait_for_selector("g.geolayer path.land", timeout=20000)
+    except Exception:
+        pass
+    page.wait_for_timeout(3000)
     page.screenshot(path=str(FIG / "dashboard2_exploracao.png"), full_page=True)
     print("ok: dashboard2_exploracao.png")
 

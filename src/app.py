@@ -55,7 +55,7 @@ GRUPO_CORES = {
 }
 
 TEMPLATE = "plotly_white"
-FONTE = dict(family="Segoe UI, Helvetica, Arial, sans-serif")
+FONTE = dict(family="Inter, Segoe UI, Helvetica, Arial, sans-serif")
 
 RAIZ = Path(__file__).resolve().parent.parent
 _PROC = RAIZ / "data" / "processed"
@@ -169,6 +169,14 @@ def fmt_milhar(n) -> str:
     return f"{n:,}".replace(",", ".")
 
 
+def secao(titulo: str, sub: str = "") -> html.Div:
+    """Cabeçalho de seção (barra de destaque + título) para organizar a aba."""
+    filhos = [html.H3(titulo)]
+    if sub:
+        filhos.append(html.Span(sub))
+    return html.Div(className="secao", children=filhos)
+
+
 def fig_vazia(msg="Sem dados para os filtros selecionados") -> go.Figure:
     fig = go.Figure()
     fig.add_annotation(text=msg, showarrow=False,
@@ -180,12 +188,20 @@ def fig_vazia(msg="Sem dados para os filtros selecionados") -> go.Figure:
 
 def estilizar(fig: go.Figure, titulo: str) -> go.Figure:
     fig.update_layout(
-        title=dict(text=titulo, font=dict(size=16, color="#2C3E50")),
-        template=TEMPLATE, font=FONTE,
-        margin=dict(l=10, r=10, t=50, b=10),
+        title=dict(text=titulo, font=dict(size=15.5, color="#1A2433"),
+                   x=0.012, xanchor="left"),
+        template=TEMPLATE, font=FONTE, height=400,
+        margin=dict(l=14, r=14, t=54, b=14),
         paper_bgcolor="white", plot_bgcolor="white",
+        colorway=["#1A5276", "#2E86C1", "#5499C7", "#85C1E9"],
         separators=",.",  # pt-BR: vírgula decimal, ponto de milhar (1.234,5)
     )
+    # Grade clara SÓ em gráficos cartesianos — pizza e mapa geo não têm eixos x/y
+    # (mexer neles criava eixos fantasmas que cobriam o mapa).
+    tipos = {type(t).__name__ for t in fig.data}
+    if not tipos & {"Pie", "Scattergeo", "Choropleth"}:
+        fig.update_xaxes(gridcolor="#EEF1F5", zerolinecolor="#E7EBF0")
+        fig.update_yaxes(gridcolor="#EEF1F5", zerolinecolor="#E7EBF0")
     return fig
 
 
@@ -345,14 +361,17 @@ def layout_visao_geral() -> html.Div:
                    "estão os gargalos de pontualidade."),
         ]),
         kpis_gerais(),
+        secao("Mercado e sazonalidade", "volume mês a mês e concentração entre companhias"),
         html.Div(className="grid-2", children=[
             dcc.Graph(figure=fig_evolucao_mensal()),
             dcc.Graph(figure=fig_market_share()),
         ]),
+        secao("Pontualidade e principais hubs", "quem atrasa mais e por onde o país voa"),
         html.Div(className="grid-2", children=[
             dcc.Graph(figure=fig_pontualidade_grupos()),
             dcc.Graph(figure=fig_top_aeroportos()),
         ]),
+        secao("Composição da operação", "tipos de linha operados em 2024"),
         dcc.Graph(figure=fig_tipo_linha()),
         html.Div(className="rodape-insight", children=[
             html.B("Leitura rápida: "),
@@ -434,19 +453,26 @@ def layout_exploracao() -> html.Div:
                       className="metrica-dica"),
         ]),
         html.Div(id="kpis-filtro", className="kpi-row kpi-row-sm"),
+        secao("Volume e malha", "como o recorte se distribui no tempo e nas rotas"),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-evolucao"),
             dcc.Graph(id="g-rotas"),
         ]),
+        secao("Pontualidade", "quem mais atrasa e quando os atrasos acontecem"),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-atraso-cia"),
             dcc.Graph(id="g-heatmap"),
         ]),
+        secao("Padrões de atraso", "relação com a distância e distribuição dos atrasos"),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-dispersao"),
             dcc.Graph(id="g-distribuicao"),
         ]),
-        dcc.Graph(id="g-mapa"),
+        secao("Geografia", "aeroportos de origem por volume de voos"),
+        # altura explícita + responsive: o mapa geo precisa de container dimensionado
+        # desde o início (senão o plotly erra a escala e não desenha)
+        dcc.Graph(id="g-mapa", style={"height": "540px"},
+                  config={"responsive": True}),
     ])
 
 
@@ -458,9 +484,30 @@ app = Dash(__name__, title="Aviação Brasil 2024 (ANAC)",
            assets_folder=str((RAIZ / "assets").resolve()))
 server = app.server
 
+# Favicon: aviãozinho (ícone SVG, sem arquivo .ico)
+_AVIAO_SVG = ("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' "
+              "viewBox='0 0 24 24' fill='%231A5276'><path d='M21 16v-2l-8-5V3.5"
+              "c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22"
+              "l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z'/></svg>")
+app.index_string = """<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        <link rel="icon" href=\"""" + _AVIAO_SVG + """\">
+        {%css%}
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>{%config%}{%scripts%}{%renderer%}</footer>
+    </body>
+</html>"""
+
 app.layout = html.Div(children=[
     html.Div(className="topo", children=[
-        html.H1("Aviação Civil Brasileira: análise do VRA 2024"),
+        html.H1([html.Span(className="topo-aviao"),
+                 "Aviação Civil Brasileira: análise do VRA 2024"]),
         html.Span("Fonte: ANAC (Voo Regular Ativo), OurAirports, dados abertos",
                   className="topo-sub"),
     ]),
@@ -698,14 +745,18 @@ def atualizar(grupos, tipo, regioes, meses, metrica):
     if len(mp):
         mp["aeroporto"] = (mp["origem_icao"].map(ROTULO_AEROPORTO)
                            .fillna(mp["origem_municipality"]))
+        # escala que NÃO começa em branco (senão aeroporto com poucos voos some
+        # no fundo claro) + contorno em cada bolha para garantir visibilidade
+        escala_mapa = [[0.0, "#7FB3D5"], [0.45, "#2E86C1"], [1.0, "#0B3C5D"]]
         fig_mapa = px.scatter_geo(
             mp, lat="origem_lat", lon="origem_lon",
             size="voos", size_max=35, color="voos",
-            color_continuous_scale="Blues",
+            color_continuous_scale=escala_mapa,
             hover_name="aeroporto", custom_data=["voos"],
             scope="south america",
             labels={"voos": "Voos"})
         fig_mapa.update_traces(
+            marker=dict(line=dict(color="#15466B", width=0.6)),
             hovertemplate="<b>%{hovertext}</b><br>%{customdata[0]:,} voos<extra></extra>")
         fig_mapa.update_geos(
             showcountries=True, countrycolor="#D5DBDB",
