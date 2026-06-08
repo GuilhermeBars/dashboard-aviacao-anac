@@ -1,0 +1,63 @@
+codigo_icao,empresa,pais,tipo_servico,grupo
+AZU,Azul Linhas Aéreas,Brasil,Passageiros,Azul
+ACN,Azul Conecta,Brasil,Passageiros,Azul
+TAM,LATAM Airlines Brasil,Brasil,Passageiros,LATAM
+GLO,Gol Linhas Aéreas,Brasil,Passageiros,Gol
+PTB,VOEPASS Linhas Aéreas,Brasil,Passageiros,Outras nacionais
+PAM,MAP Linhas Aéreas,Brasil,Passageiros,Outras nacionais
+ABJ,Abaeté Linhas Aéreas,Brasil,Passageiros,Outras nacionais
+SID,Sideral Linhas Aéreas,Brasil,Cargueiro,Cargueiro
+TTL,Total Linhas Aéreas,Brasil,Cargueiro,Cargueiro
+LTG,LATAM Cargo Brasil,Brasil,Cargueiro,Cargueiro
+ARG,Aerolíneas Argentinas,Argentina,Passageiros,Internacional
+TAP,TAP Air Portugal,Portugal,Passageiros,Internacional
+CMP,Copa Airlines,Panamá,Passageiros,Internacional
+LAN,LATAM Airlines Chile,Chile,Passageiros,Internacional
+LPE,LATAM Airlines Perú,Peru,Passageiros,Internacional
+LAE,LATAM Airlines Equador,Equador,Passageiros,Internacional
+QTR,Qatar Airways,Catar,Passageiros,Internacional
+SKU,Sky Airline,Chile,Passageiros,Internacional
+SKX,Sky Airline Perú,Peru,Passageiros,Internacional
+AAL,American Airlines,Estados Unidos,Passageiros,Internacional
+FBZ,Flybondi,Argentina,Passageiros,Internacional
+AVA,Avianca,Colômbia,Passageiros,Internacional
+JAT,JetSMART,Chile,Passageiros,Internacional
+JES,JetSMART Argentina,Argentina,Passageiros,Internacional
+DAL,Delta Air Lines,Estados Unidos,Passageiros,Internacional
+UAL,United Airlines,Estados Unidos,Passageiros,Internacional
+ITY,ITA Airways,Itália,Passageiros,Internacional
+ETH,Ethiopian Airlines,Etiópia,Passageiros,Internacional
+AFR,Air France,França,Passageiros,Internacional
+IBE,Iberia,Espanha,Passageiros,Internacional
+THY,Turkish Airlines,Turquia,Passageiros,Internacional
+BAW,British Airways,Reino Unido,Passageiros,Internacional
+ACA,Air Canada,Canadá,Passageiros,Internacional
+UAE,Emirates,Emirados Árabes Unidos,Passageiros,Internacional
+KLM,KLM Royal Dutch Airlines,Países Baixos,Passageiros,Internacional
+BOV,Boliviana de Aviación,Bolívia,Passageiros,Internacional
+DLH,Lufthansa,Alemanha,Passageiros,Internacional
+AEA,Air Europa,Espanha,Passageiros,Internacional
+SWR,Swiss International Air Lines,Suíça,Passageiros,Internacional
+AMX,Aeroméxico,México,Passageiros,Internacional
+KAL,Korean Air,Coreia do Sul,Passageiros,Internacional
+DTA,TAAG Angola Airlines,Angola,Passageiros,Internacional
+SAA,South African Airways,África do Sul,Passageiros,Internacional
+SLM,Surinam Airways,Suriname,Passageiros,Internacional
+LOT,LOT Polish Airlines,Polônia,Passageiros,Internacional
+CCA,Air China,China,Passageiros,Internacional
+SVA,Saudia,Arábia Saudita,Passageiros,Internacional
+LAP,Líneas Aéreas Paraguayas,Paraguai,Passageiros,Internacional
+OAE,Omni Air International,Estados Unidos,Passageiros,Internacional
+HFY,Hi Fly,Portugal,Passageiros,Internacional
+GTI,Atlas Air,Estados Unidos,Cargueiro,Cargueiro
+TPA,Tampa Cargo (LATAM Cargo),Colômbia,Cargueiro,Cargueiro
+LCO,LATAM Cargo Chile,Chile,Cargueiro,Cargueiro
+CJT,Cargojet,Canadá,Cargueiro,Cargueiro
+CLX,Cargolux,Luxemburgo,Cargueiro,Cargueiro
+UPS,UPS Airlines,Estados Unidos,Cargueiro,Cargueiro
+GEC,Lufthansa Cargo,Alemanha,Cargueiro,Cargueiro
+FDX,FedEx Express,Estados Unidos,Cargueiro,Cargueiro
+MPH,Martinair Cargo,Países Baixos,Cargueiro,Cargueiro
+AZG,Silk Way West Airlines,Azerbaijão,Cargueiro,Cargueiro
+NCR,National Airlines,Estados Unidos,Cargueiro,Cargueiro
+MAA,MasAir,México,Cargueiro,Cargueiro
