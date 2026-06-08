@@ -138,4 +138,22 @@ A análise completa, com gráficos e interpretação, está em
 - [x] Dashboard 2 (sete visualizações, quatro filtros, comparações, seleção de categorias)
 - [x] Boas práticas de comunicação visual (baseadas em Storytelling with Data)
 
-Stack: Python, Pandas, NumPy, Matplotlib, Seaborn, Dash e Plotly.
+## Ferramentas por etapa
+
+Cada parte do projeto usa a ferramenta adequada — em especial, **o dashboard
+interativo é feito em Dash + Plotly, não em Matplotlib**. O Matplotlib/Seaborn
+gera apenas as figuras estáticas da análise exploratória que aparecem no
+relatório.
+
+| Etapa | Ferramenta | Arquivo |
+|---|---|---|
+| Coleta automática (crawler, bônus) | requests | `src/crawler.py` |
+| Pipeline (integração, limpeza, transformação) | pandas, numpy | `src/preprocessing.py` |
+| Análise exploratória (gráficos **estáticos** do relatório) | **matplotlib, seaborn** | `src/analise_exploratoria.py` |
+| **Dashboards interativos** (no link público, com filtros) | **Dash, Plotly** | `src/app.py` |
+
+Em resumo: a análise exploratória (as figuras `figuras/01_*.png`…`08_*.png`) foi
+feita em **matplotlib/seaborn**; os **dois dashboards interativos**, em
+**Dash e Plotly**.
+
+Stack completo: Python, Pandas, NumPy, Matplotlib, Seaborn, Dash e Plotly.
