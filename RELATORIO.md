@@ -2,7 +2,7 @@
 ### Relatório do projeto final (Estudos Avançados de Banco de Dados)
 
 > Fonte principal: ANAC, Voo Regular Ativo (VRA), ano de 2024.
-> Volume analisado: cerca de 988 mil voos regulares, 62 companhias e 385 aeroportos.
+> Volume analisado: cerca de 988 mil voos regulares, 110 companhias e 385 aeroportos.
 > Ferramentas: Python, Pandas, Matplotlib, Dash e Plotly.
 
 Disciplina: Estudos Avançados de Banco de Dados. Professor: José Guilherme
