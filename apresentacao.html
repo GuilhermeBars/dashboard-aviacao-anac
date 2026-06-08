@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Apresentação: Aviação Civil Brasileira (ANAC/VRA 2024)</title>
+<style>
+  :root{
+    --azul:#1A5276; --azul2:#2E86C1; --tinta:#2C3E50; --cinza:#5D6D7E;
+    --neg:#C0392B; --pos:#1E8449; --linha:#EAEDED;
+  }
+  @page{ size:297mm 210mm; margin:0; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ font-family:"Segoe UI",Helvetica,Arial,sans-serif; color:var(--tinta); }
+
+  .slide{
+    position:relative; width:297mm; height:209mm; padding:16mm 20mm 14mm 20mm;
+    page-break-after:always; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .slide:last-child{ page-break-after:auto; }
+
+  .kicker{ color:var(--azul2); font-weight:700; letter-spacing:2.5px;
+           font-size:12px; text-transform:uppercase; }
+  .title{ color:var(--azul); font-size:30px; font-weight:800; margin-top:3px;
+          padding-bottom:10px; border-bottom:3px solid var(--linha); }
+  .body{ flex:1; margin-top:16px; }
+
+  ul.b{ list-style:none; }
+  ul.b li{ position:relative; padding-left:26px; margin:13px 0;
+           font-size:18px; line-height:1.42; }
+  ul.b li:before{ content:"›"; position:absolute; left:2px; top:-3px;
+                  color:var(--azul2); font-weight:800; font-size:23px; }
+  .sub{ color:var(--cinza); font-size:14.5px; }
+  b.hl{ color:var(--azul); }
+  b.bad{ color:var(--neg); }
+  b.good{ color:var(--pos); }
+
+  .why{ background:#EBF5FB; border-left:5px solid var(--azul2);
+        padding:12px 18px; border-radius:8px; font-size:16px; margin-top:14px; line-height:1.4; }
+
+  .stats{ display:flex; gap:14px; margin-top:22px; }
+  .stat{ flex:1; background:#F4F6F7; border-radius:10px; padding:16px 10px;
+         text-align:center; border-top:4px solid var(--azul2); }
+  .stat .n{ font-size:30px; font-weight:800; color:var(--azul); }
+  .stat .l{ font-size:13px; color:var(--cinza); margin-top:2px; }
+
+  table.src{ width:100%; border-collapse:collapse; margin-top:18px; font-size:16px; }
+  table.src th{ background:var(--azul); color:#fff; padding:11px 14px; text-align:left; }
+  table.src td{ padding:10px 14px; border-bottom:1px solid var(--linha); }
+  table.src tr:nth-child(even) td{ background:#F8F9F9; }
+  table.src td .m{ color:var(--cinza); font-size:13.5px; }
+
+  .flow{ display:flex; align-items:center; gap:6px; margin-top:34px; }
+  .step{ flex:1; background:var(--azul); color:#fff; border-radius:12px;
+         padding:20px 8px; text-align:center; }
+  .step.alt{ background:var(--azul2); }
+  .step .num{ font-size:12px; opacity:.85; }
+  .step .nm{ font-weight:700; font-size:15px; margin-top:5px; }
+  .arrow{ color:var(--azul2); font-size:22px; font-weight:800; }
+  .flow-cap{ text-align:center; color:var(--cinza); font-size:15px; margin-top:26px; }
+
+  .code{ background:#1B2631; color:#EAEDED; padding:14px 18px; border-radius:8px;
+         font-family:Menlo,Consolas,monospace; font-size:14px; line-height:1.55;
+         margin-top:16px; white-space:pre; }
+  .code .c{ color:#7FB3D5; }
+  .code .s{ color:#7DCEA0; }
+
+  .split{ display:flex; gap:24px; flex:1; align-items:center; margin-top:14px; }
+  .split .txt{ flex:0 0 41%; }
+  .split .txt ul.b li{ font-size:16.5px; margin:11px 0; }
+  .split .img{ flex:1; text-align:center; }
+  .split .img img{ max-height:142mm; max-width:100%;
+                   border:1px solid #E5E8E8; border-radius:6px; }
+
+  .two{ display:flex; gap:16px; flex:1; align-items:center; justify-content:center; margin-top:8px; }
+  .two img{ max-height:122mm; max-width:48%; border:1px solid #E5E8E8; border-radius:6px; }
+
+  .grid3{ display:flex; gap:16px; margin-top:18px; }
+  .col{ flex:1; background:#F8F9F9; border-radius:10px; padding:14px 16px;
+        border-top:4px solid var(--azul2); }
+  .col h4{ color:var(--azul); font-size:16px; margin-bottom:8px; }
+  .col p{ font-size:14.5px; line-height:1.4; color:var(--tinta); }
+
+  .footer{ position:absolute; left:20mm; right:20mm; bottom:8mm;
+           display:flex; justify-content:space-between; align-items:center;
+           font-size:11.5px; color:#AEB6BF; border-top:1px solid var(--linha);
+           padding-top:7px; }
+
+  /* Capa */
+  .cover{ height:209mm; display:flex; flex-direction:column; align-items:center;
+          justify-content:center; text-align:center; padding:0 30mm;
+          background:linear-gradient(160deg,#fff 55%,#EBF2F8 100%); }
+  .cv-puc{ font-size:46px; font-weight:800; letter-spacing:8px; color:var(--azul); }
+  .cv-puc small{ display:block; font-size:14px; letter-spacing:3px; color:var(--azul2);
+                 font-weight:700; margin-top:2px; }
+  .cv-uni{ margin-top:14px; font-size:16px; color:var(--cinza); }
+  .cv-disc{ font-size:15px; color:var(--cinza); margin-top:4px; }
+  .cv-title{ margin-top:42px; font-size:44px; font-weight:800; color:var(--azul); line-height:1.1; }
+  .cv-sub{ font-size:20px; color:var(--azul2); font-weight:600; margin-top:10px; }
+  .cv-team{ margin-top:40px; font-size:15.5px; color:var(--tinta); line-height:1.7; }
+  .cv-city{ margin-top:34px; font-size:15px; color:var(--cinza); }
+</style>
+</head>
+<body>
+
+<!-- 1. CAPA -->
+<section class="slide" style="padding:0;">
+  <div class="cover">
+    <div class="cv-puc">PUC<small>CAMPINAS</small></div>
+    <div class="cv-uni">Pontifícia Universidade Católica de Campinas · Engenharia de Software</div>
+    <div class="cv-disc">Estudos Avançados de Banco de Dados · Prof. José Guilherme Picolo</div>
+    <div class="cv-title">Análise da Aviação Civil Brasileira</div>
+    <div class="cv-sub">Dashboard Interativo dos Voos da ANAC (VRA 2024)</div>
+    <div class="cv-team">
+      Felipe Cosmo Granziol · Guilherme Bars · Gustavo Kurten<br>
+      João Celso · Pedro Tiezo Sales Shimizu
+    </div>
+    <div class="cv-city">Campinas · 2026</div>
+  </div>
+</section>
+
+<!-- 2. TEMA -->
+<section class="slide">
+  <div class="kicker">Contexto</div>
+  <div class="title">Tema e pergunta de pesquisa</div>
+  <div class="body">
+    <ul class="b">
+      <li>A aviação comercial é um <b class="hl">termômetro da economia e da mobilidade</b> do país.</li>
+      <li>Analisamos os dados abertos da <b class="hl">ANAC (Voo Regular Ativo, VRA)</b>, de todo o ano de 2024.</li>
+    </ul>
+    <div class="why">
+      <b>Pergunta que guia o estudo:</b> quem voa no Brasil, quando voa e
+      <b>onde estão os gargalos de pontualidade</b> da aviação comercial?
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="n">~988 mil</div><div class="l">voos regulares</div></div>
+      <div class="stat"><div class="n">62</div><div class="l">companhias</div></div>
+      <div class="stat"><div class="n">385</div><div class="l">aeroportos</div></div>
+      <div class="stat"><div class="n">12 meses</div><div class="l">ano de 2024</div></div>
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>2</span></div>
+</section>
+
+<!-- 3. FONTE DOS DADOS -->
+<section class="slide">
+  <div class="kicker">Dados</div>
+  <div class="title">Fonte dos dados: 3 fontes públicas integradas</div>
+  <div class="body">
+    <table class="src">
+      <tr><th>Fonte</th><th>Arquivos</th><th>Papel no modelo</th><th>Registros</th></tr>
+      <tr><td><b>VRA (ANAC)</b><br><span class="m">sistemas.anac.gov.br</span></td>
+          <td>12 CSV mensais</td><td>Tabela-fato (cada voo)</td><td>~988 mil</td></tr>
+      <tr><td><b>OurAirports</b></td><td>airports.csv</td>
+          <td>Dimensão de aeroportos (cidade, UF, região, lat/lon)</td><td>~80 mil</td></tr>
+      <tr><td><b>Companhias</b><br><span class="m">ANAC / OpenFlights</span></td>
+          <td>dim_companhias.csv</td><td>Dimensão de companhias (nome, país, grupo)</td><td>62</td></tr>
+    </table>
+    <div class="why">
+      <b>Requisitos atendidos:</b> ≥ 10.000 registros (um único mês já tem ~85 mil voos)
+      e ≥ 2 arquivos distintos, com forte potencial de <b>análise comparativa</b>.
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>3</span></div>
+</section>
+
+<!-- 4. PIPELINE OVERVIEW -->
+<section class="slide">
+  <div class="kicker">Visão geral</div>
+  <div class="title">Pipeline de Ciência de Dados</div>
+  <div class="body">
+    <div class="flow">
+      <div class="step"><div class="num">Etapa 1</div><div class="nm">Aquisição</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="num">Etapa 2</div><div class="nm">Integração</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="num">Etapa 3</div><div class="nm">Limpeza</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="num">Etapa 4</div><div class="nm">Transformação</div></div>
+      <div class="arrow">→</div>
+      <div class="step"><div class="num">Etapa 5</div><div class="nm">Análise</div></div>
+      <div class="arrow">→</div>
+      <div class="step alt"><div class="num">Entrega</div><div class="nm">Dashboard</div></div>
+    </div>
+    <div class="flow-cap">
+      Cada etapa exigida no projeto, implementada em <b>Python + Pandas</b> · scripts em <code>src/</code>.
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>4</span></div>
+</section>
+
+<!-- 5. Etapa 1 - AQUISIÇÃO -->
+<section class="slide">
+  <div class="kicker">Pipeline · Etapa 1</div>
+  <div class="title">Aquisição de dados</div>
+  <div class="body">
+    <ul class="b">
+      <li>Leitura dos <b class="hl">12 CSV mensais</b> do VRA com Pandas (<code>sep=";"</code>, pulando a linha de metadado "Atualizado em:").</li>
+      <li>Cada arquivo traz ~85 mil voos com horários previsto/real, origem, destino e situação.</li>
+      <li><b class="good">BÔNUS:</b> um <b>crawler</b> (<code>src/crawler.py</code>) baixa sozinho os 12 meses + aeroportos, direto da ANAC, sem login.</li>
+    </ul>
+    <div class="code"><span class="c"># aquisição + empilhamento dos meses</span>
+partes = [pd.read_csv(arq, sep=<span class="s">";"</span>, skiprows=1) for arq in glob(<span class="s">"data/raw/VRA_*.csv"</span>)]
+voos = pd.concat(partes)        <span class="c"># 988.022 voos</span></div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>5</span></div>
+</section>
+
+<!-- 6. Etapa2 - INTEGRAÇÃO -->
+<section class="slide">
+  <div class="kicker">Pipeline · Etapa 2</div>
+  <div class="title">Integração de dados: concat + merge</div>
+  <div class="body">
+    <ul class="b">
+      <li><b class="hl">Concatenação (concat):</b> empilha os 12 meses em uma única base de ~988 mil linhas.</li>
+      <li><b class="hl">Merge 1 e 2:</b> voos × <b>aeroportos</b> (na origem e no destino) → cidade, UF, região e coordenadas.</li>
+      <li><b class="hl">Merge 3:</b> voos × <b>companhias</b> → nome, país e grupo da empresa.</li>
+    </ul>
+    <div class="why">
+      <b>Resultado:</b> cada voo passa a carregar a <b>geografia</b> de origem/destino e a
+      <b>identidade da companhia</b>, e a base fica pronta para comparar grupos.
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>6</span></div>
+</section>
+
+<!-- 7. Etapa3 - LIMPEZA -->
+<section class="slide">
+  <div class="kicker">Pipeline · Etapa 3</div>
+  <div class="title">Limpeza e tratamento dos dados</div>
+  <div class="body">
+    <div class="grid3">
+      <div class="col"><h4>Valores ausentes</h4>
+        <p>Coluna <code>Código Justificativa</code> estava <b>100% vazia</b> → removida.
+           Voos realizados sem horário previsto → mantidos usando a <b>partida real</b> como referência.</p></div>
+      <div class="col"><h4>Inconsistências</h4>
+        <p>Atrasos absurdos (&gt; 12 h, erro de fuso) → tratados como nulos.
+           <b>Duplicatas</b> removidas. Período restrito a 2024.</p></div>
+      <div class="col"><h4>Padronização</h4>
+        <p>Datas → <code>datetime</code> ISO8601 (corrige segundos fracionados que falhavam).
+           Códigos ICAO em maiúsculo; situação do voo uniformizada.</p></div>
+    </div>
+    <div class="why">
+      <b>Preparação para análise:</b> base consistente, sem ambiguidade de formato,
+      pronta para a etapa de transformação.
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>7</span></div>
+</section>
+
+<!-- 8. Etapa4 - TRANSFORMAÇÃO -->
+<section class="slide">
+  <div class="kicker">Pipeline · Etapa 4</div>
+  <div class="title">Transformação de dados: novas variáveis</div>
+  <div class="body">
+    <ul class="b">
+      <li><b class="hl">Padronização:</b> textos, categorias e unidades de tempo (minutos).</li>
+      <li><b class="hl">Criação de variáveis:</b> <code>atraso_chegada_min</code>, <code>atrasado</code> (&gt; 15 min),
+          <code>cancelado</code>, <code>rota</code>, <code>distancia_km</code> (fórmula de <b>Haversine</b>),
+          recortes temporais (mês, dia da semana, hora, período).</li>
+      <li><b class="hl">Agregações:</b> por companhia, rota, aeroporto, mês e dia × hora.</li>
+    </ul>
+    <div class="why">
+      <b>Base final:</b> 46 colunas, limpa e enriquecida, salva em <code>data/processed/voos.parquet</code>.
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>8</span></div>
+</section>
+
+<!-- 9. Etapa5 - EDA -->
+<section class="slide">
+  <div class="kicker">Pipeline · Etapa 5</div>
+  <div class="title">Análise exploratória</div>
+  <div class="split">
+    <div class="txt">
+      <ul class="b">
+        <li>Estatística descritiva + gráficos (<b>matplotlib / seaborn</b>).</li>
+        <li><b class="bad">16,9%</b> dos voos atrasam &gt; 15 min; <b class="bad">4,3%</b> são cancelados.</li>
+        <li>Na mediana, os voos chegam <b class="good">~3 min adiantados</b>, mas a cauda de atrasos é longa.</li>
+        <li>A análise revelou <b class="hl">6 insights interpretados</b> →</li>
+      </ul>
+    </div>
+    <div class="img"><img src="figuras/01_distribuicao_atrasos.png" alt="Distribuição dos atrasos"></div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>9</span></div>
+</section>
+
+<!-- 10. INSIGHT 1 -->
+<section class="slide">
+  <div class="kicker">Insight 1 · Comparação entre grupos</div>
+  <div class="title">Um mercado de três gigantes</div>
+  <div class="split">
+    <div class="txt">
+      <ul class="b">
+        <li><b>O que encontramos:</b> Azul (40%), LATAM (30%) e Gol (25%) concentram <b class="hl">~95% do mercado doméstico</b>.</li>
+        <li>A <b>Azul é a maior</b>, mas a <b class="bad">menos pontual</b> das três (16,7% vs ~14,5%).</li>
+      </ul>
+      <div class="why"><b>Por que importa:</b> é um <b>oligopólio</b>, e a líder paga o preço de voar muitos aeroportos regionais, mais sujeitos a atraso.</div>
+    </div>
+    <div class="img"><img src="figuras/03_top3_companhias.png" alt="Top 3 companhias"></div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>10</span></div>
+</section>
+
+<!-- 11. INSIGHT 2 -->
+<section class="slide">
+  <div class="kicker">Insight 2 · Comportamento temporal</div>
+  <div class="title">Os atrasos se acumulam ao longo do dia</div>
+  <div class="body">
+    <ul class="b">
+      <li><b>O que encontramos:</b> a taxa de atraso sobe de <b class="good">~8% pela manhã</b> para <b class="bad">~22% no fim de tarde/noite</b>. É o clássico <b>efeito cascata</b> (um atraso cedo se propaga). Pior janela: <b>quinta e sexta à noite</b>.</li>
+    </ul>
+    <div class="two">
+      <img src="figuras/04_atraso_por_hora.png" alt="Atraso por hora">
+      <img src="figuras/08_heatmap_atrasos.png" alt="Heatmap de atrasos">
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>11</span></div>
+</section>
+
+<!-- 12. INSIGHT 3 -->
+<section class="slide">
+  <div class="kicker">Insight 3 · Tendência / sazonalidade</div>
+  <div class="title">Sazonalidade do volume e dos cancelamentos</div>
+  <div class="split">
+    <div class="txt">
+      <ul class="b">
+        <li><b>O que encontramos:</b> volume com <b class="hl">picos em julho</b> (férias) e no fim de ano; vale em fevereiro.</li>
+        <li>Cancelamentos mais altos no <b class="bad">início do ano</b> (jan ~5%).</li>
+      </ul>
+      <div class="why"><b>Por que importa:</b> o calendário (férias e chuvas de verão no Sudeste) explica picos de demanda e de cancelamento, o que ajuda a planejar capacidade.</div>
+    </div>
+    <div class="img"><img src="figuras/02_sazonalidade.png" alt="Sazonalidade"></div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>12</span></div>
+</section>
+
+<!-- 13. INSIGHT 4 -->
+<section class="slide">
+  <div class="kicker">Insight 4 · Comparação entre grupos</div>
+  <div class="title">Internacionais atrasam mais que domésticos</div>
+  <div class="split">
+    <div class="txt">
+      <ul class="b">
+        <li><b>O que encontramos:</b> <b class="bad">22,5%</b> dos voos internacionais atrasam, contra <b class="good">15,8%</b> dos domésticos.</li>
+      </ul>
+      <div class="why"><b>Por que importa:</b> rotas longas, congestionamento nos grandes hubs e procedimentos de imigração/alfândega ampliam o atraso acumulado na chegada.</div>
+    </div>
+    <div class="img"><img src="figuras/06_dom_x_internacional.png" alt="Doméstico x Internacional"></div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>13</span></div>
+</section>
+
+<!-- 14. INSIGHT 5 -->
+<section class="slide">
+  <div class="kicker">Insight 5 · Concentração geográfica</div>
+  <div class="title">O Brasil voa pelo Sudeste</div>
+  <div class="body">
+    <ul class="b">
+      <li><b>O que encontramos:</b> São Paulo (Guarulhos + Congonhas), Brasília, Rio e Belo Horizonte concentram a maior parte do movimento. <b>Poucos hubs</b> respondem pela maioria dos voos, o que torna a malha vulnerável a gargalos nesses aeroportos.</li>
+    </ul>
+    <div class="two">
+      <img src="figuras/07_top_aeroportos.png" alt="Top aeroportos">
+      <img src="figuras/mapa_aeroportos.png" alt="Mapa de aeroportos">
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>14</span></div>
+</section>
+
+<!-- 15. DASHBOARDS -->
+<section class="slide">
+  <div class="kicker">Entrega</div>
+  <div class="title">Os dois dashboards (Dash + Plotly)</div>
+  <div class="body">
+    <ul class="b">
+      <li><b class="hl">Dashboard 1, Visão Geral:</b> indicadores-chave + 4 gráficos sintéticos (painel executivo).</li>
+      <li><b class="hl">Dashboard 2, Exploração Interativa:</b> 4 filtros + 7 visualizações de tipos diferentes (linha, barras, heatmap, dispersão, pizza e mapa).</li>
+    </ul>
+    <div class="two">
+      <img src="figuras/dashboard1_visao_geral.png" alt="Dashboard 1">
+      <img src="figuras/dashboard2_exploracao.png" alt="Dashboard 2">
+    </div>
+  </div>
+  <div class="footer"><span>Aviação Civil Brasileira · ANAC/VRA 2024</span><span>15</span></div>
+</section>
+
+<!-- 16. CONCLUSÃO -->
+<section class="slide">
+  <div class="kicker">Conclusão</div>
+  <div class="title">O que os dados nos contam</div>
+  <div class="body">
+    <ul class="b">
+      <li>Aviação brasileira <b class="hl">concentrada</b>: três empresas e o eixo Sudeste dominam.</li>
+      <li>Pontualidade <b class="hl">previsível</b>: piora ao longo do dia e no fim de semana (efeito cascata).</li>
+      <li>Perfis de operação distintos: a líder <b>Azul</b> troca pontualidade por <b>capilaridade regional</b>.</li>
+      <li>~1 milhão de linhas de dados crus → <b class="hl">informação útil</b> para o passageiro e para o setor.</li>
+    </ul>
+    <div class="why">
+      <b>Repositório completo (código + dados + relatório):</b><br>
+      github.com/GuilhermeBars/dashboard-aviacao-anac
+    </div>
+  </div>
+  <div class="footer"><span>Projeto Final · Estudos Avançados de Banco de Dados · PUC-Campinas</span><span>16</span></div>
+</section>
+
+</body>
+</html>
