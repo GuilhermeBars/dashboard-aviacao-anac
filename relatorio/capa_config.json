@@ -1,0 +1,19 @@
+{
+  "universidade": "PONTIFÍCIA UNIVERSIDADE CATÓLICA DE CAMPINAS",
+  "curso": "Curso de Engenharia de Software",
+  "disciplina": "Estudos Avançados de Banco de Dados",
+  "equipe_label": "Integrantes",
+  "integrantes": [
+    { "nome": "Felipe Cosmo Granziol", "ra": "24021602" },
+    { "nome": "Guilherme Bars", "ra": "24014122" },
+    { "nome": "Gustavo Kurten", "ra": "24008150" },
+    { "nome": "João Celso", "ra": "24012463" },
+    { "nome": "Pedro Tiezo Sales Shimizu", "ra": "24005158" }
+  ],
+  "titulo": "Análise da Aviação Civil Brasileira",
+  "subtitulo": "Dashboard Interativo dos Voos da ANAC (VRA 2024)",
+  "professor_label": "Professor:",
+  "professor": "José Guilherme Picolo",
+  "cidade": "Campinas",
+  "ano": "2026"
+}
