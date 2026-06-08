@@ -16,5 +16,9 @@ Thumbs.db
 # Dados processados pesados (regerados pelo pipeline)
 data/processed/*.parquet
 
+# Pacote de deploy (gerado por build_deploy.py; sobe pro Hugging Face, não pro GitHub)
+deploy_hf/
+data/processed/aeroportos_label.json
+
 # Capa: HTML intermediário (PDF é o que importa)
 capa.html

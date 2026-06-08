@@ -9,8 +9,9 @@ Aplicação Dash com DOIS dashboards (abas):
         principal dos dados de forma rápida e objetiva.
 
   • Dashboard 2 — Exploração Interativa:
-        4 filtros + 7 visualizações de tipos diferentes para o usuário
-        explorar os dados em detalhe (companhias, rotas, atrasos, mapa...).
+        4 filtros + seletor de métrica + 7 visualizações de tipos diferentes
+        para o usuário explorar os dados em detalhe e, a cada recorte, ver os
+        insights do relatório (companhias, rotas, atrasos, mapa...).
 
 Rodar:
     python src/app.py
@@ -19,6 +20,8 @@ Rodar:
 
 from __future__ import annotations
 
+import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -55,7 +58,12 @@ TEMPLATE = "plotly_white"
 FONTE = dict(family="Segoe UI, Helvetica, Arial, sans-serif")
 
 RAIZ = Path(__file__).resolve().parent.parent
-ARQ_DADOS = RAIZ / "data" / "processed" / "voos.parquet"
+_PROC = RAIZ / "data" / "processed"
+# Localmente usamos a base completa; no deploy (Hugging Face) usamos a base
+# enxuta de ~5 MB (mesmos números, só as colunas usadas), gerada por
+# build_deploy.py.
+ARQ_DADOS = (_PROC / "voos.parquet" if (_PROC / "voos.parquet").exists()
+             else _PROC / "voos_deploy.parquet")
 
 
 # ---------------------------------------------------------------------------
@@ -65,13 +73,68 @@ ARQ_DADOS = RAIZ / "data" / "processed" / "voos.parquet"
 if not ARQ_DADOS.exists():
     raise SystemExit(
         "Base processada não encontrada. Rode antes:\n"
-        "  python src/crawler.py\n  python src/preprocessing.py"
+        "  python src/crawler.py\n  python src/preprocessing.py\n"
+        "(ou python build_deploy.py para gerar a base enxuta de deploy)"
     )
 
 print("Carregando base processada...")
 df = pd.read_parquet(ARQ_DADOS)
 df_real = df[~df["cancelado"]].copy()   # voos realizados (p/ métricas de atraso)
 print(f"Base carregada: {len(df):,} voos")
+
+# Atraso médio do país — referência p/ colorir barras (acima da média = vermelho)
+MEDIA_ATRASO_PCT = df_real["atrasado"].mean() * 100
+
+
+# ---------------------------------------------------------------------------
+# Rótulos legíveis de aeroporto/rota — o leitor não precisa conhecer aviação.
+# Traduz a sigla ICAO (SBSP) para "Cidade (IATA)", ex.: "São Paulo (CGH)".
+# ---------------------------------------------------------------------------
+
+def _rotulos_aeroportos() -> dict:
+    # No deploy, os rótulos já vêm prontos num JSON pequeno (evita depender do
+    # airports.csv de 12 MB em produção).
+    arq_json = _PROC / "aeroportos_label.json"
+    if arq_json.exists():
+        return json.loads(arq_json.read_text(encoding="utf-8"))
+    cidade = {}
+    for lado in ("origem", "destino"):
+        sub = (df[[f"{lado}_icao", f"{lado}_municipality"]]
+               .dropna(subset=[f"{lado}_icao"]).drop_duplicates(f"{lado}_icao"))
+        for icao, mun in sub.itertuples(index=False):
+            if icao not in cidade and pd.notna(mun):
+                cidade[icao] = str(mun).strip()
+    # IATA (a sigla de 3 letras que aparece na passagem) vem da base de aeroportos
+    iata = {}
+    arq = RAIZ / "data" / "raw" / "airports.csv"
+    if arq.exists():
+        ap = (pd.read_csv(arq, usecols=["ident", "iata_code"])
+              .dropna(subset=["iata_code"]))
+        iata = dict(ap.itertuples(index=False))
+    rot = {}
+    for icao in set(cidade) | set(iata):
+        c, s = cidade.get(icao), iata.get(icao)
+        if c and s:
+            rot[icao] = f"{c} ({s})"
+        elif c:
+            rot[icao] = c
+        elif s:
+            rot[icao] = f"{icao} ({s})"
+        else:
+            rot[icao] = icao
+    return rot
+
+
+ROTULO_AEROPORTO = _rotulos_aeroportos()
+
+
+def rota_legivel(rota) -> str:
+    """'SBRJ→SBSP'  ->  'Rio De Janeiro (SDU) → São Paulo (CGH)'."""
+    if not isinstance(rota, str) or "→" not in rota:
+        return str(rota)
+    o, d = rota.split("→", 1)
+    return f"{ROTULO_AEROPORTO.get(o, o)} → {ROTULO_AEROPORTO.get(d, d)}"
+
 
 MESES_ORD = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
              "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
@@ -92,6 +155,20 @@ def card_kpi(titulo: str, valor: str, cor: str = COR_DESTAQUE,
     ])
 
 
+def fmt_milhar(n) -> str:
+    """Contagem de voos legível em pt-BR.
+
+    987997 -> '988 mil' | 12345 -> '12.345' | 532 -> '532'
+    (evita o pouco intuitivo '0,99 mi' e usa '.' como separador de milhar).
+    """
+    n = int(round(float(n)))
+    if n >= 1_000_000:
+        return f"{n / 1_000_000:.1f} mi".replace(".", ",")
+    if n >= 100_000:
+        return f"{round(n / 1000)} mil"
+    return f"{n:,}".replace(",", ".")
+
+
 def fig_vazia(msg="Sem dados para os filtros selecionados") -> go.Figure:
     fig = go.Figure()
     fig.add_annotation(text=msg, showarrow=False,
@@ -107,6 +184,7 @@ def estilizar(fig: go.Figure, titulo: str) -> go.Figure:
         template=TEMPLATE, font=FONTE,
         margin=dict(l=10, r=10, t=50, b=10),
         paper_bgcolor="white", plot_bgcolor="white",
+        separators=",.",  # pt-BR: vírgula decimal, ponto de milhar (1.234,5)
     )
     return fig
 
@@ -119,18 +197,19 @@ def kpis_gerais() -> html.Div:
     total = len(df)
     pct_canc = df["cancelado"].mean() * 100
     pct_atras = df_real["atrasado"].mean() * 100
-    atraso_med = df_real.loc[df_real["atraso_chegada_min"].notna(),
-                             "atraso_chegada_min"].mean()
+    # Atraso médio considerando SÓ os voos atrasados (>15 min) — sem isso a
+    # média afunda perto de zero, pois 60% dos voos chegam adiantados.
+    atraso_med = df_real.loc[df_real["atrasado"], "atraso_chegada_min"].mean()
     pct_dom = (df["tipo_voo"].eq("Doméstico").mean()) * 100
     return html.Div(className="kpi-row", children=[
-        card_kpi("Voos no ano", f"{total/1e6:.2f} mi", COR_DESTAQUE,
-                 "registros do VRA 2024"),
+        card_kpi("Voos em 2024", fmt_milhar(total), COR_DESTAQUE,
+                 "registros do VRA"),
         card_kpi("Cancelamentos", f"{pct_canc:.1f}%", COR_NEGATIVO,
                  "do total de voos"),
         card_kpi("Voos atrasados", f"{pct_atras:.1f}%", COR_NEGATIVO,
-                 "chegada > 15 min"),
-        card_kpi("Atraso médio", f"{atraso_med:.0f} min", COR_DESTAQUE,
-                 "na chegada (realizados)"),
+                 "chegada acima de 15 min"),
+        card_kpi("Atraso médio", f"{atraso_med:.0f} min", COR_NEGATIVO,
+                 "dos voos atrasados (>15 min)"),
         card_kpi("Companhias", f"{df['empresa'].nunique()}", COR_POSITIVO,
                  "operando no país"),
         card_kpi("Aeroportos", f"{df['origem_icao'].nunique()}", COR_POSITIVO,
@@ -170,10 +249,28 @@ def fig_market_share() -> go.Figure:
     fig = go.Figure(go.Pie(
         labels=ordem, values=g.values, hole=0.55,
         marker=dict(colors=[GRUPO_CORES.get(x, COR_NEUTRO) for x in ordem]),
-        textinfo="label+percent", sort=False,
+        textinfo="label+percent", sort=False, domain=dict(x=[0.0, 0.58]),
         hovertemplate="%{label}: %{value:.1f}%<extra></extra>"))
+
+    # "Outras" reúne dezenas de companhias menores — mostra exemplos no cantinho
+    out = dom[~dom["grupo"].isin(g3)]["empresa"]
+    exemplos = [e for e in out.value_counts().index
+                if not str(e).startswith("Outras (")][:5]
+    curtos = [str(e).replace(" Linhas Aéreas", "").replace(" Brasil", "")
+              for e in exemplos]
+    n_total = out.nunique()
+    txt = ("<b>O que é “Outras” (4,7%)</b><br>"
+           + "<br>".join(f"• {c}" for c in curtos)
+           + f"<br>+ {n_total - len(curtos)} companhias menores<br>"
+           "<span style='font-size:10px'>(regionais e cargueiras)</span>")
+    fig.add_annotation(
+        text=txt, x=0.62, xanchor="left", y=0.5, yanchor="middle",
+        xref="paper", yref="paper", showarrow=False, align="left",
+        font=dict(size=11, color="#5D6D7E"),
+        bordercolor="#D5DBDB", borderwidth=1, borderpad=8, bgcolor="#FbFcFc")
     fig.update_layout(showlegend=False)
-    return estilizar(fig, "Participação no mercado doméstico (3 grandes dominam)")
+    return estilizar(fig,
+                     "Participação no mercado doméstico em 2024 (3 grandes dominam)")
 
 
 def fig_pontualidade_grupos() -> go.Figure:
@@ -186,7 +283,7 @@ def fig_pontualidade_grupos() -> go.Figure:
         text=[f"{v:.1f}%" for v in g.values], textposition="outside",
         hovertemplate="%{x}: %{y:.1f}% atrasados<extra></extra>"))
     fig.update_yaxes(title="% de voos atrasados", rangemode="tozero")
-    return estilizar(fig, "Pontualidade das 3 maiores companhias")
+    return estilizar(fig, "Pontualidade das 3 maiores companhias em 2024")
 
 
 def fig_top_aeroportos() -> go.Figure:
@@ -199,7 +296,21 @@ def fig_top_aeroportos() -> go.Figure:
         marker_color=COR_DESTAQUE,
         hovertemplate="%{y}: %{x:,} movimentos<extra></extra>"))
     fig.update_xaxes(title="Movimentos (pousos + decolagens)", tickformat=",")
-    return estilizar(fig, "Top 10 cidades por movimentação aérea")
+    return estilizar(fig, "Top 10 cidades por movimentação aérea em 2024")
+
+
+def fig_tipo_linha() -> go.Figure:
+    """Composição da operação por tipo de linha (movida da aba interativa)."""
+    tl = df["tipo_linha_desc"].value_counts()
+    cores = [COR_DESTAQUE, "#34495E", COR_NEUTRO, "#7F8C8D", "#BDC3C7", "#D5DBDB"]
+    fig = go.Figure(go.Pie(
+        labels=tl.index, values=tl.values, hole=0.5, sort=True,
+        marker=dict(colors=cores[:len(tl)]), textinfo="percent",
+        hovertemplate="%{label}: %{value:,} voos (%{percent})<extra></extra>"))
+    fig.update_layout(showlegend=True,
+                      legend=dict(orientation="v", x=1.0, y=0.5,
+                                  font=dict(size=12)))
+    return estilizar(fig, "Composição da operação por tipo de linha em 2024")
 
 
 def layout_visao_geral() -> html.Div:
@@ -219,6 +330,7 @@ def layout_visao_geral() -> html.Div:
             dcc.Graph(figure=fig_pontualidade_grupos()),
             dcc.Graph(figure=fig_top_aeroportos()),
         ]),
+        dcc.Graph(figure=fig_tipo_linha()),
         html.Div(className="rodape-insight", children=[
             html.B("Leitura rápida: "),
             "três companhias (Gol, Azul e LATAM) concentram a quase totalidade "
@@ -272,10 +384,32 @@ def layout_exploracao() -> html.Div:
     return html.Div(className="aba", children=[
         html.Div(className="aba-header", children=[
             html.H2("Exploração Interativa"),
-            html.P("Use os filtros para recortar os dados por companhia, tipo "
-                   "de voo, região e período. Todos os gráficos reagem em conjunto."),
+            html.P("Os mesmos padrões da Visão Geral, agora nas suas mãos. "
+                   "Recorte por companhia, tipo de voo, região e período: todos os "
+                   "gráficos e indicadores reagem juntos. Cada painel abaixo "
+                   "aprofunda um dos insights do relatório."),
+        ]),
+        html.Div(className="story-guia", children=[
+            html.B("Como ler esta aba: "),
+            "o ", html.B("volume"), " mostra a sazonalidade (Insight 4); as ",
+            html.B("rotas"), " e o ", html.B("mapa"),
+            " mostram a concentração no Sudeste (Insights 1 e 6); e os três painéis "
+            "de atraso revelam ", html.B("onde mora a falta de pontualidade"),
+            " — por companhia (Insight 2), por dia e hora (Insight 3) e por "
+            "distância da rota (Insight 5). ",
+            html.I("Dica: selecione só a Azul e veja o heatmap acender no fim de tarde."),
         ]),
         painel_filtros(),
+        html.Div(className="metrica-bar", children=[
+            html.Label("Métrica de pontualidade:"),
+            dcc.RadioItems(
+                id="f-metrica",
+                options=[{"label": " % de voos atrasados", "value": "pct"},
+                         {"label": " Atraso médio (min)", "value": "min"}],
+                value="pct", inline=True, className="metrica-radio"),
+            html.Span("aplica-se ao gráfico por companhia e ao mapa de calor",
+                      className="metrica-dica"),
+        ]),
         html.Div(id="kpis-filtro", className="kpi-row kpi-row-sm"),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-evolucao"),
@@ -287,7 +421,7 @@ def layout_exploracao() -> html.Div:
         ]),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-dispersao"),
-            dcc.Graph(id="g-tipo-linha"),
+            dcc.Graph(id="g-distribuicao"),
         ]),
         dcc.Graph(id="g-mapa"),
     ])
@@ -346,14 +480,15 @@ def aplicar_filtros(grupos, tipo, regioes, meses):
     Output("g-atraso-cia", "figure"),
     Output("g-heatmap", "figure"),
     Output("g-dispersao", "figure"),
-    Output("g-tipo-linha", "figure"),
+    Output("g-distribuicao", "figure"),
     Output("g-mapa", "figure"),
     Input("f-grupo", "value"),
     Input("f-tipo", "value"),
     Input("f-regiao", "value"),
     Input("f-mes", "value"),
+    Input("f-metrica", "value"),
 )
-def atualizar(grupos, tipo, regioes, meses):
+def atualizar(grupos, tipo, regioes, meses, metrica):
     d = aplicar_filtros(grupos, tipo, regioes, meses)
     if len(d) == 0:
         v = fig_vazia()
@@ -362,13 +497,15 @@ def atualizar(grupos, tipo, regioes, meses):
     d_real = d[~d["cancelado"]]
 
     # ----- KPIs do recorte -----
+    # Atraso médio só dos atrasados (>15 min): "quando atrasa, atrasa quanto?"
+    atr_atrasados = d_real.loc[d_real["atrasado"], "atraso_chegada_min"]
+    atraso_med_rec = atr_atrasados.mean() if len(atr_atrasados) else 0
     kpis = html.Div(className="kpi-row kpi-row-sm", children=[
-        card_kpi("Voos no recorte", f"{len(d):,}", COR_DESTAQUE),
+        card_kpi("Voos no recorte", fmt_milhar(len(d)), COR_DESTAQUE),
         card_kpi("% cancelados", f"{d['cancelado'].mean()*100:.1f}%", COR_NEGATIVO),
         card_kpi("% atrasados", f"{d_real['atrasado'].mean()*100:.1f}%", COR_NEGATIVO),
-        card_kpi("Atraso médio",
-                 f"{d_real['atraso_chegada_min'].mean():.0f} min", COR_DESTAQUE),
-        card_kpi("Rotas distintas", f"{d['rota'].nunique():,}", COR_POSITIVO),
+        card_kpi("Atraso quando atrasa", f"{atraso_med_rec:.0f} min", COR_NEGATIVO),
+        card_kpi("Rotas distintas", fmt_milhar(d['rota'].nunique()), COR_POSITIVO),
     ])
 
     # ----- 1) Evolução mensal (linha) -----
@@ -379,71 +516,138 @@ def atualizar(grupos, tipo, regioes, meses):
         fillcolor="rgba(26,82,118,0.08)",
         hovertemplate="%{x}: %{y:,} voos<extra></extra>"))
     fig_evo.update_yaxes(rangemode="tozero", tickformat=",")
-    fig_evo = estilizar(fig_evo, "Volume de voos por mês")
+    fig_evo = estilizar(fig_evo, "Sazonalidade: volume de voos mês a mês (2024)")
+    fig_evo.update_layout(hovermode="x unified")
+    fig_evo.update_xaxes(showspikes=True, spikethickness=1,
+                         spikecolor=COR_NEUTRO, spikemode="across", spikedash="dot")
 
-    # ----- 2) Top 15 rotas (barra horizontal) -----
+    # ----- 2) Top 15 rotas (barra horizontal) — rótulos por cidade -----
     rt = d["rota"].value_counts().head(15).sort_values()
+    rotas_nome = [rota_legivel(r) for r in rt.index]
     fig_rotas = go.Figure(go.Bar(
-        x=rt.values, y=rt.index, orientation="h",
+        x=rt.values, y=rotas_nome, orientation="h",
         marker_color=COR_DESTAQUE,
-        hovertemplate="%{y}: %{x:,} voos<extra></extra>"))
+        customdata=list(rt.index),
+        hovertemplate="<b>%{y}</b><br>%{x:,} voos<br>"
+                      "<span style='font-size:11px;color:#888'>código: %{customdata}</span>"
+                      "<extra></extra>"))
     fig_rotas.update_xaxes(title="Voos", tickformat=",")
-    fig_rotas = estilizar(fig_rotas, "Top 15 rotas mais movimentadas")
+    fig_rotas.update_yaxes(automargin=True)
+    fig_rotas = estilizar(fig_rotas,
+                          "Concentração de rotas: as 15 mais movimentadas (2024)")
 
-    # ----- 3) Atraso médio por companhia (barra) -----
-    ca = (d_real.groupby("empresa")
-          .agg(atraso=("atraso_chegada_min", "mean"), n=("empresa", "size"))
-          .query("n >= 200").sort_values("atraso").tail(15).reset_index())
-    cor_barra = np.where(ca["atraso"] > 15, COR_NEGATIVO, COR_POSITIVO)
+    # ----- 3) Quem mais atrasa seus voos no Brasil (barra) — Insight 2 -----
+    # Todo voo da malha brasileira (ANAC/VRA) conta — inclusive companhias
+    # estrangeiras em rotas internacionais de/para o Brasil. A métrica escolhida
+    # define o que a barra mostra: % de atrasados ou minutos médios.
+    if metrica == "min":
+        ca = (d_real.groupby("empresa")
+              .agg(val=("atraso_chegada_min", "mean"), n=("empresa", "size"))
+              .query("n >= 200").sort_values("val").tail(15).reset_index())
+        ref, eixo, detalhe = 15, "Atraso médio na chegada (min)", "atraso médio na chegada"
+        texto = [f"{v:.0f}" for v in ca["val"]]
+        hover_cia = "%{y}: %{x:.1f} min (%{customdata:,} voos no Brasil)<extra></extra>"
+    else:
+        ca = (d_real.groupby("empresa")
+              .agg(val=("atrasado", "mean"), n=("empresa", "size"))
+              .query("n >= 200"))
+        ca["val"] *= 100
+        ca = ca.sort_values("val").tail(15).reset_index()
+        ref, eixo, detalhe = MEDIA_ATRASO_PCT, "% de voos atrasados", "% de voos atrasados"
+        texto = [f"{v:.0f}%" for v in ca["val"]]
+        hover_cia = "%{y}: %{x:.1f}% atrasados (%{customdata:,} voos no Brasil)<extra></extra>"
+    escopo = {
+        "Doméstico": "voos domésticos no Brasil",
+        "Internacional": "voos internacionais de/para o Brasil (inclui estrangeiras)",
+    }.get(tipo, "voos domésticos e internacionais (inclui estrangeiras)")
+    titulo_cia = ("Quem mais atrasa seus voos no Brasil"
+                  "<br><span style='font-size:11px;color:#7F8C8D'>"
+                  f"{detalhe} · {escopo} · companhias com ≥200 voos no recorte "
+                  "(2024 · fonte ANAC/VRA)</span>")
+    cor_barra = np.where(ca["val"] > ref, COR_NEGATIVO, COR_POSITIVO)
     fig_cia = go.Figure(go.Bar(
-        x=ca["atraso"], y=ca["empresa"], orientation="h",
+        x=ca["val"], y=ca["empresa"], orientation="h",
         marker_color=cor_barra,
-        text=[f"{v:.0f}" for v in ca["atraso"]], textposition="outside",
-        hovertemplate="%{y}: %{x:.1f} min (%{customdata:,} voos)<extra></extra>",
-        customdata=ca["n"]))
-    fig_cia.update_xaxes(title="Atraso médio na chegada (min)")
-    fig_cia = estilizar(fig_cia, "Atraso médio por companhia (≥200 voos)")
+        text=texto, textposition="outside",
+        hovertemplate=hover_cia, customdata=ca["n"]))
+    fig_cia.add_vline(x=ref, line_dash="dot", line_color=COR_NEUTRO,
+                      annotation_text="média do país" if metrica == "pct"
+                      else "limiar 15 min",
+                      annotation_position="top")
+    fig_cia.update_xaxes(title=eixo)
+    fig_cia = estilizar(fig_cia, titulo_cia)
+    fig_cia.update_layout(margin=dict(t=64))
 
-    # ----- 4) Heatmap dia da semana × hora (% atrasados) -----
-    hm = (d_real.dropna(subset=["dia_semana_nome", "hora_prevista"])
-          .groupby(["dia_semana_nome", "hora_prevista"])["atrasado"]
-          .mean().mul(100).reset_index())
+    # ----- 4) Heatmap dia da semana × hora — Insight 3 -----
+    base_hm = d_real.dropna(subset=["dia_semana_nome", "hora_prevista"])
+    if metrica == "min":
+        hm = (base_hm.groupby(["dia_semana_nome", "hora_prevista"])
+              ["atraso_chegada_min"].mean().reset_index(name="val"))
+        cbar, hover_hm = "min", "%{y}, %{x}h: %{z:.0f} min<extra></extra>"
+        titulo_hm = ("Quando os atrasos acontecem em 2024: "
+                     "atraso médio (min) por dia e hora")
+    else:
+        hm = (base_hm.groupby(["dia_semana_nome", "hora_prevista"])
+              ["atrasado"].mean().mul(100).reset_index(name="val"))
+        cbar, hover_hm = "% atras.", "%{y}, %{x}h: %{z:.0f}% atrasados<extra></extra>"
+        titulo_hm = ("Quando os atrasos acontecem em 2024: % atrasados por dia e "
+                     "hora (pico no fim de tarde)")
     if len(hm):
         piv = hm.pivot(index="dia_semana_nome", columns="hora_prevista",
-                       values="atrasado").reindex(DIAS_ORD)
+                       values="val").reindex(DIAS_ORD)
         fig_hm = go.Figure(go.Heatmap(
             z=piv.values, x=piv.columns, y=piv.index,
-            colorscale="OrRd", colorbar=dict(title="% atras."),
-            hovertemplate="%{y}, %{x}h: %{z:.0f}% atrasados<extra></extra>"))
+            colorscale="OrRd", colorbar=dict(title=cbar),
+            hovertemplate=hover_hm))
         fig_hm.update_xaxes(title="Hora do dia")
     else:
         fig_hm = fig_vazia()
-    fig_hm = estilizar(fig_hm, "% de atrasos por dia da semana e hora")
+    fig_hm = estilizar(fig_hm, titulo_hm)
 
     # ----- 5) Dispersão distância × atraso por rota (bolhas) -----
     rr = (d_real.dropna(subset=["distancia_km", "atraso_chegada_min"])
           .groupby("rota")
           .agg(dist=("distancia_km", "first"),
                atraso=("atraso_chegada_min", "mean"),
-               n=("rota", "size")).query("n >= 100"))
+               n=("rota", "size")).query("n >= 100").reset_index())
     if len(rr):
+        rr["rota_nome"] = rr["rota"].map(rota_legivel)
         fig_disp = px.scatter(
             rr, x="dist", y="atraso", size="n", size_max=40,
             color="atraso", color_continuous_scale="RdYlGn_r",
+            custom_data=["rota_nome", "n"],
             labels={"dist": "Distância da rota (km)",
                     "atraso": "Atraso médio (min)", "n": "Voos"})
         fig_disp.update_traces(
-            hovertemplate="Dist.: %{x:.0f} km<br>Atraso: %{y:.1f} min<extra></extra>")
+            hovertemplate="<b>%{customdata[0]}</b><br>Distância: %{x:.0f} km<br>"
+                          "Atraso médio: %{y:.1f} min<br>%{customdata[1]:,} voos<extra></extra>")
     else:
         fig_disp = fig_vazia()
-    fig_disp = estilizar(fig_disp, "Distância da rota × atraso médio (bolha = nº de voos)")
+    fig_disp = estilizar(fig_disp,
+                         "Distância × atraso em 2024: rotas mais longas tendem a atrasar mais")
 
-    # ----- 6) Distribuição por tipo de linha (pizza) -----
-    tl = d["tipo_linha_desc"].value_counts()
-    fig_tl = go.Figure(go.Pie(
-        labels=tl.index, values=tl.values, hole=0.45,
-        hovertemplate="%{label}: %{value:,} (%{percent})<extra></extra>"))
-    fig_tl = estilizar(fig_tl, "Composição por tipo de linha")
+    # ----- 6) Distribuição dos atrasos na chegada (histograma) -----
+    # Pré-agrega no servidor (np.histogram) p/ não enviar ~1M de pontos ao browser.
+    serie = d_real["atraso_chegada_min"].dropna().clip(-60, 120)
+    if len(serie):
+        contagem, bordas = np.histogram(serie, bins=36, range=(-60, 120))
+        centros = (bordas[:-1] + bordas[1:]) / 2
+        # verde = adiantado/no horário | azul = até 15 min | vermelho = atrasado
+        cores = [COR_NEGATIVO if c > 15 else (COR_POSITIVO if c <= 0 else COR_DESTAQUE)
+                 for c in centros]
+        fig_dist = go.Figure(go.Bar(
+            x=centros, y=contagem, marker_color=cores,
+            width=(bordas[1] - bordas[0]) * 0.95,
+            hovertemplate="~%{x:.0f} min: %{y:,} voos<extra></extra>"))
+        fig_dist.add_vline(x=15, line_dash="dash", line_color=COR_NEGATIVO,
+                           annotation_text="limiar 15 min", annotation_position="top")
+        fig_dist.update_xaxes(title="Atraso na chegada (min) — negativo = adiantado")
+        fig_dist.update_yaxes(title="Nº de voos", tickformat=",")
+    else:
+        fig_dist = fig_vazia()
+    fig_dist = estilizar(fig_dist,
+                         "Distribuição dos atrasos na chegada em 2024 "
+                         "(a maioria chega no horário)")
 
     # ----- 7) Mapa dos aeroportos (geo) -----
     mp = (d.groupby(["origem_icao", "origem_municipality",
@@ -452,13 +656,17 @@ def atualizar(grupos, tipo, regioes, meses):
           .dropna(subset=["origem_lat", "origem_lon"])
           .sort_values("voos", ascending=False).head(60))
     if len(mp):
+        mp["aeroporto"] = (mp["origem_icao"].map(ROTULO_AEROPORTO)
+                           .fillna(mp["origem_municipality"]))
         fig_mapa = px.scatter_geo(
             mp, lat="origem_lat", lon="origem_lon",
             size="voos", size_max=35, color="voos",
             color_continuous_scale="Blues",
-            hover_name="origem_municipality",
+            hover_name="aeroporto", custom_data=["voos"],
             scope="south america",
             labels={"voos": "Voos"})
+        fig_mapa.update_traces(
+            hovertemplate="<b>%{hovertext}</b><br>%{customdata[0]:,} voos<extra></extra>")
         fig_mapa.update_geos(
             showcountries=True, countrycolor="#D5DBDB",
             showland=True, landcolor="#FbFcFc",
@@ -466,11 +674,14 @@ def atualizar(grupos, tipo, regioes, meses):
     else:
         fig_mapa = fig_vazia()
     fig_mapa = estilizar(fig_mapa,
-                         "Aeroportos de origem por volume de voos (60 maiores)")
+                         "Onde o Brasil voa em 2024: concentração geográfica (60 maiores aeroportos)")
     fig_mapa.update_layout(height=520)
 
-    return kpis, fig_evo, fig_rotas, fig_cia, fig_hm, fig_disp, fig_tl, fig_mapa
+    return kpis, fig_evo, fig_rotas, fig_cia, fig_hm, fig_disp, fig_dist, fig_mapa
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="127.0.0.1", port=8050)
+    # PORT/HOST por variável de ambiente (deploy define; local usa o padrão).
+    app.run(debug=False,
+            host=os.environ.get("HOST", "127.0.0.1"),
+            port=int(os.environ.get("PORT", 8050)))

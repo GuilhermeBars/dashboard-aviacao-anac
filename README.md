@@ -99,13 +99,15 @@ trabalhopicolofinal/
 
 ## Os dois dashboards
 
-Dashboard 1, Visão Geral: um painel executivo com os indicadores-chave e quatro
+Dashboard 1, Visão Geral: um painel executivo com os indicadores-chave e cinco
 gráficos sintéticos, para entender o panorama em uma olhada (volume, mercado,
-pontualidade e principais hubs).
+pontualidade, principais hubs e composição da operação por tipo de linha).
 
 Dashboard 2, Exploração Interativa: quatro filtros (grupo/companhia, tipo de
-voo, região e período) e sete visualizações de tipos diferentes (linha, barras,
-heatmap, dispersão, pizza e mapa). Os gráficos reagem juntos aos filtros.
+voo, região e período), um seletor de métrica de pontualidade (% de atrasados ou
+atraso médio em minutos) e sete visualizações de tipos diferentes (linha, barras,
+heatmap, dispersão, histograma e mapa). Tudo reage em conjunto, e um guia de
+leitura liga cada painel ao insight correspondente do relatório.
 
 ![Dashboard 2: Exploração Interativa](figuras/dashboard2_exploracao.png)
 

@@ -158,13 +158,18 @@ Brasília, Rio e Belo Horizonte, responde pela maior parte dos voos.
 ## 5. Os dashboards
 
 ### Dashboard 1: Visão Geral (executivo)
-Indicadores-chave e gráficos sintéticos para entender o panorama em segundos.
+Indicadores-chave e cinco gráficos sintéticos (volume, mercado, pontualidade,
+principais hubs e composição da operação por tipo de linha) para entender o
+panorama em segundos.
 
 ![Dashboard 1](figuras/dashboard1_visao_geral.png)
 
 ### Dashboard 2: Exploração Interativa
-Quatro filtros (companhia, tipo de voo, região e período) e sete visualizações
-que reagem juntas, para recortar os dados e comparar grupos livremente.
+Quatro filtros (companhia, tipo de voo, região e período), um seletor de métrica
+de pontualidade (% de atrasados ou atraso médio em minutos) e sete visualizações
+que reagem juntas, para recortar os dados e comparar grupos livremente. Um guia
+de leitura no topo conecta cada painel a um dos insights acima (sazonalidade,
+concentração de mercado e geografia, e onde mora o atraso).
 
 ![Dashboard 2](figuras/dashboard2_exploracao.png)
 
