@@ -300,17 +300,40 @@ def fig_top_aeroportos() -> go.Figure:
 
 
 def fig_tipo_linha() -> go.Figure:
-    """Composição da operação por tipo de linha (movida da aba interativa)."""
+    """Composição da operação por tipo de linha — barra horizontal.
+
+    Mais clara que a pizza quando há uma categoria dominante e várias
+    minúsculas. Cores agrupam por natureza: azul = passageiros, âmbar = carga,
+    cinza = outros.
+    """
     tl = df["tipo_linha_desc"].value_counts()
-    cores = [COR_DESTAQUE, "#34495E", COR_NEUTRO, "#7F8C8D", "#BDC3C7", "#D5DBDB"]
-    fig = go.Figure(go.Pie(
-        labels=tl.index, values=tl.values, hole=0.5, sort=True,
-        marker=dict(colors=cores[:len(tl)]), textinfo="percent",
-        hovertemplate="%{label}: %{value:,} voos (%{percent})<extra></extra>"))
-    fig.update_layout(showlegend=True,
-                      legend=dict(orientation="v", x=1.0, y=0.5,
-                                  font=dict(size=12)))
-    return estilizar(fig, "Composição da operação por tipo de linha em 2024")
+    pct = (tl / tl.sum() * 100).sort_values()   # ascending: maior fica no topo
+    paleta = {
+        "Nacional (passageiros)": "#1A5276",
+        "Internacional (passageiros)": "#5499C7",
+        "Cargueiro nacional": "#CA6F1E",
+        "Cargueiro internacional": "#E59866",
+        "Outros / ligação": "#7F8C8D",
+        "Outros": "#BDC3C7",
+    }
+    cores = [paleta.get(k, COR_NEUTRO) for k in pct.index]
+
+    def _fmt(v):
+        if v >= 1:
+            return f"{v:.1f}%"
+        return f"{v:.2f}%" if v >= 0.01 else f"{v:.4f}%"
+
+    fig = go.Figure(go.Bar(
+        x=pct.values, y=pct.index, orientation="h",
+        marker_color=cores,
+        text=[_fmt(v) for v in pct.values], textposition="outside",
+        customdata=tl.reindex(pct.index).values,
+        hovertemplate="%{y}: %{x:.2f}% (%{customdata:,} voos)<extra></extra>"))
+    fig.update_xaxes(title="% dos voos no ano", ticksuffix="%",
+                     range=[0, 100])
+    fig.update_yaxes(automargin=True)
+    return estilizar(fig, "Composição da operação por tipo de linha em 2024 "
+                          "(passageiros dominam)")
 
 
 def layout_visao_geral() -> html.Div:
@@ -578,28 +601,45 @@ def atualizar(grupos, tipo, regioes, meses, metrica):
     fig_cia = estilizar(fig_cia, titulo_cia)
     fig_cia.update_layout(margin=dict(t=64))
 
-    # ----- 4) Heatmap dia da semana × hora — Insight 3 -----
-    base_hm = d_real.dropna(subset=["dia_semana_nome", "hora_prevista"])
+    # ----- 4) Heatmap dia × período do dia — Insight 3 -----
+    # Agrupa as 24h em 4 períodos nomeados e ESCREVE o valor em cada célula
+    # (cor do texto contrasta com o fundo). Fica direto de ler, sem decifrar tons.
+    base_hm = d_real.dropna(subset=["dia_semana_nome", "hora_prevista"]).copy()
+    PERIODOS = ["Madrugada", "Manhã", "Tarde", "Noite"]
+    base_hm["periodo"] = pd.cut(base_hm["hora_prevista"], bins=[-1, 5, 11, 17, 23],
+                                labels=PERIODOS)
     if metrica == "min":
-        hm = (base_hm.groupby(["dia_semana_nome", "hora_prevista"])
+        hm = (base_hm.groupby(["dia_semana_nome", "periodo"], observed=True)
               ["atraso_chegada_min"].mean().reset_index(name="val"))
-        cbar, hover_hm = "min", "%{y}, %{x}h: %{z:.0f} min<extra></extra>"
+        cbar, sufixo = "min", " min"
         titulo_hm = ("Quando os atrasos acontecem em 2024: "
-                     "atraso médio (min) por dia e hora")
+                     "atraso médio (min) por dia e período")
     else:
-        hm = (base_hm.groupby(["dia_semana_nome", "hora_prevista"])
+        hm = (base_hm.groupby(["dia_semana_nome", "periodo"], observed=True)
               ["atrasado"].mean().mul(100).reset_index(name="val"))
-        cbar, hover_hm = "% atras.", "%{y}, %{x}h: %{z:.0f}% atrasados<extra></extra>"
-        titulo_hm = ("Quando os atrasos acontecem em 2024: % atrasados por dia e "
-                     "hora (pico no fim de tarde)")
+        cbar, sufixo = "% atras.", "%"
+        titulo_hm = ("Quando os atrasos acontecem em 2024: % de voos atrasados por "
+                     "dia e período (pior: tarde/noite de quinta e sexta)")
     if len(hm):
-        piv = hm.pivot(index="dia_semana_nome", columns="hora_prevista",
-                       values="val").reindex(DIAS_ORD)
+        piv = (hm.pivot(index="dia_semana_nome", columns="periodo", values="val")
+               .reindex(index=DIAS_ORD, columns=PERIODOS))
+        z = piv.values.astype(float)
+        zmin, zmax = np.nanmin(z), np.nanmax(z)
+        lim = zmin + 0.55 * (zmax - zmin) if zmax > zmin else zmax
         fig_hm = go.Figure(go.Heatmap(
-            z=piv.values, x=piv.columns, y=piv.index,
-            colorscale="OrRd", colorbar=dict(title=cbar),
-            hovertemplate=hover_hm))
-        fig_hm.update_xaxes(title="Hora do dia")
+            z=z, x=PERIODOS, y=list(piv.index), colorscale="OrRd",
+            colorbar=dict(title=cbar), xgap=2, ygap=2,
+            hovertemplate="%{y}, %{x}: %{z:.1f}" + sufixo + "<extra></extra>"))
+        # valor em cada célula, branco no fundo escuro e escuro no claro
+        for i, dia in enumerate(piv.index):
+            for j, per in enumerate(PERIODOS):
+                v = z[i][j]
+                if not np.isnan(v):
+                    fig_hm.add_annotation(
+                        x=per, y=dia, text=f"{v:.0f}{sufixo}", showarrow=False,
+                        font=dict(size=13,
+                                  color="white" if v >= lim else "#2C3E50"))
+        fig_hm.update_xaxes(title="Período do dia")
     else:
         fig_hm = fig_vazia()
     fig_hm = estilizar(fig_hm, titulo_hm)
