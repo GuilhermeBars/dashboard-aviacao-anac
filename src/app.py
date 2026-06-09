@@ -393,18 +393,22 @@ def layout_visao_geral() -> html.Div:
                 "para mais aeroportos regionais. O movimento se concentra no ",
                 html.B("Sudeste"), " — São Paulo, Brasília, Rio e BH lideram."),
         secao("Composição da operação", "tipos de linha operados em 2024"),
-        # largura cheia: altura fixa + responsive=False p/ não crescer em loop
-        dcc.Graph(figure=fig_tipo_linha(), style={"height": "410px"},
-                  responsive=False),
-        insight("A operação é quase toda de ", html.B("passageiros (~95%)"),
-                "; a carga aérea responde por cerca de 4% dos voos, e o doméstico "
-                "domina sobre o internacional."),
-        html.Div(className="rodape-insight", children=[
-            html.B("Leitura rápida: "),
-            "três companhias (Gol, Azul e LATAM) concentram a quase totalidade "
-            "do mercado doméstico; o volume tem picos sazonais (férias e fim de "
-            "ano); e há diferença clara de pontualidade entre as grandes. "
-            "Explore os detalhes na aba ao lado.",
+        # chart à esquerda; insight + leitura rápida ocupam o espaço à direita
+        html.Div(className="grid-fim", children=[
+            dcc.Graph(figure=fig_tipo_linha(), style={"height": "410px"},
+                      responsive=False),
+            html.Div(className="coluna-lateral", children=[
+                insight("A operação é quase toda de ", html.B("passageiros (~95%)"),
+                        "; a carga aérea responde por cerca de 4% dos voos, e o "
+                        "doméstico domina sobre o internacional."),
+                html.Div(className="rodape-insight", children=[
+                    html.B("Leitura rápida: "),
+                    "três companhias (Gol, Azul e LATAM) concentram a quase "
+                    "totalidade do mercado doméstico; o volume tem picos sazonais "
+                    "(férias e fim de ano); e há diferença clara de pontualidade "
+                    "entre as grandes. Explore os detalhes na aba ao lado.",
+                ]),
+            ]),
         ]),
     ])
 

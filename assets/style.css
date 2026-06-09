@@ -156,6 +156,7 @@ body {
     margin-bottom: 18px;
 }
 .grid-2 > div,
+.grid-fim .js-plotly-plot,
 .aba > div > .js-plotly-plot {
     background: var(--card);
     border: 1px solid var(--borda);
@@ -166,6 +167,23 @@ body {
 }
 .grid-2 > div:hover { box-shadow: var(--sombra-hover); }
 .aba > div > .js-plotly-plot { margin-bottom: 18px; }
+
+/* Última seção do D1: chart à esquerda, insight + leitura rápida à direita */
+.grid-fim {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+    align-items: stretch;
+}
+.coluna-lateral {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+}
+.coluna-lateral .insight-box,
+.coluna-lateral .rodape-insight { margin: 0; }
 
 /* ---- Caixa de Insight (comunica o achado de cada seção) ---- */
 .insight-box {
@@ -277,6 +295,6 @@ body {
 
 /* ---- Responsividade ---- */
 @media (max-width: 1100px) {
-    .grid-2 { grid-template-columns: 1fr; }
+    .grid-2, .grid-fim { grid-template-columns: 1fr; }
     .filtros { grid-template-columns: 1fr 1fr; }
 }
