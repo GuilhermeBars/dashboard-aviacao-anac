@@ -393,7 +393,9 @@ def layout_visao_geral() -> html.Div:
                 "para mais aeroportos regionais. O movimento se concentra no ",
                 html.B("Sudeste"), " — São Paulo, Brasília, Rio e BH lideram."),
         secao("Composição da operação", "tipos de linha operados em 2024"),
-        dcc.Graph(figure=fig_tipo_linha()),
+        # largura cheia: altura fixa + responsive=False p/ não crescer em loop
+        dcc.Graph(figure=fig_tipo_linha(), style={"height": "410px"},
+                  responsive=False),
         insight("A operação é quase toda de ", html.B("passageiros (~95%)"),
                 "; a carga aérea responde por cerca de 4% dos voos, e o doméstico "
                 "domina sobre o internacional."),
@@ -502,10 +504,10 @@ def layout_exploracao() -> html.Div:
                 html.B("maioria dos voos chega no horário ou adiantada"),
                 " — o atraso é exceção (cauda), não regra (limiar de 15 min)."),
         secao("Geografia", "aeroportos de origem por volume de voos"),
-        # altura explícita + responsive: o mapa geo precisa de container dimensionado
-        # desde o início (senão o plotly erra a escala e não desenha)
-        dcc.Graph(id="g-mapa", style={"height": "540px"},
-                  config={"responsive": True}),
+        # altura fixa no container: o mapa geo precisa de container dimensionado
+        # desde o início (senão o plotly erra a escala e não desenha). SEM
+        # responsive — ele causa um loop de resize que faz o mapa crescer.
+        dcc.Graph(id="g-mapa", style={"height": "540px"}, responsive=False),
         insight("O ", html.B("Brasil voa pelo Sudeste"), ": Guarulhos e Congonhas "
                 "(SP) lideram, seguidos de Brasília, Galeão/Santos Dumont (RJ) e "
                 "Confins (BH). Poucos hubs concentram a maior parte dos voos."),
