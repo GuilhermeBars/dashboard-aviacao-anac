@@ -53,11 +53,11 @@ Um único arquivo mensal do VRA já traz cerca de 85 mil voos, então um mês
 sozinho supera o mínimo de 10.000 registros, e o ano inteiro chega perto de um
 milhão.
 
-## Coleta automática de dados — crawler (bônus +1)
+## Coleta automática de dados — crawler (bônus)
 
 O script **`src/crawler.py`** baixa **sozinho** todos os dados brutos do projeto,
 direto das fontes oficiais, **sem necessidade de login ou credenciais**. É o item
-que atende ao **bônus de +1 ponto** (coleta automática de dados).
+que atende ao **bônus de coleta automática de dados**.
 
 O que ele faz:
 
@@ -156,7 +156,7 @@ A análise completa, com gráficos e interpretação, está em
 - [x] Dataset público com mais de 10.000 registros (~988 mil voos)
 - [x] Pelo menos dois arquivos distintos (12 CSVs do VRA, aeroportos e companhias)
 - [x] Aquisição com Pandas
-- [x] **Crawler de coleta automática de dados — bônus +1** (`src/crawler.py`, baixa os 12 CSVs do VRA + aeroportos das fontes oficiais sem login)
+- [x] **Crawler de coleta automática de dados — bônus** (`src/crawler.py`, baixa os 12 CSVs do VRA + aeroportos das fontes oficiais sem login)
 - [x] Integração por concat (meses) e merge (dimensões)
 - [x] Limpeza: nulos, duplicatas, inconsistências e padronização
 - [x] Transformação: novas variáveis (atraso, atrasado, rota, distância, recortes temporais)

@@ -1,6 +1,6 @@
 """
-crawler.py — Coleta automática de dados (BÔNUS +1 ponto)
-========================================================
+crawler.py — Coleta automática de dados (BÔNUS)
+===============================================
 
 Baixa automaticamente os dados brutos usados no projeto, direto das fontes
 oficiais, sem necessidade de login ou credenciais:
