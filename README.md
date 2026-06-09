@@ -53,6 +53,32 @@ Um único arquivo mensal do VRA já traz cerca de 85 mil voos, então um mês
 sozinho supera o mínimo de 10.000 registros, e o ano inteiro chega perto de um
 milhão.
 
+## Coleta automática de dados — crawler (bônus +1)
+
+O script **`src/crawler.py`** baixa **sozinho** todos os dados brutos do projeto,
+direto das fontes oficiais, **sem necessidade de login ou credenciais**. É o item
+que atende ao **bônus de +1 ponto** (coleta automática de dados).
+
+O que ele faz:
+
+- **Voos (VRA / ANAC):** monta a URL de cada mês no portal de dados abertos da
+  ANAC (`sistemas.anac.gov.br/dadosabertos`) e baixa os **12 CSVs de 2024**.
+- **Aeroportos (OurAirports):** baixa o `airports.csv` (dimensão usada no merge).
+- **Robustez:** barra de progresso, **3 tentativas** com espera em caso de erro,
+  download para arquivo temporário `.part` (não corrompe se cair no meio) e
+  **pula arquivos já baixados** (permite retomar sem baixar tudo de novo).
+- **Parametrizável** por linha de comando:
+
+```bash
+python src/crawler.py                  # baixa o ano de 2024 inteiro (padrão)
+python src/crawler.py --ano 2023       # baixa outro ano
+python src/crawler.py --meses 1 2 3    # baixa apenas alguns meses
+python src/crawler.py --sem-aeroportos # pula a base de aeroportos
+```
+
+Os arquivos vão para `data/raw/`. Ou seja: **a base inteira do projeto pode ser
+recriada do zero com um único comando**, sem baixar nada manualmente.
+
 ## Como executar
 
 ```bash
@@ -129,7 +155,8 @@ A análise completa, com gráficos e interpretação, está em
 
 - [x] Dataset público com mais de 10.000 registros (~988 mil voos)
 - [x] Pelo menos dois arquivos distintos (12 CSVs do VRA, aeroportos e companhias)
-- [x] Aquisição com Pandas e crawler de coleta automática (bônus)
+- [x] Aquisição com Pandas
+- [x] **Crawler de coleta automática de dados — bônus +1** (`src/crawler.py`, baixa os 12 CSVs do VRA + aeroportos das fontes oficiais sem login)
 - [x] Integração por concat (meses) e merge (dimensões)
 - [x] Limpeza: nulos, duplicatas, inconsistências e padronização
 - [x] Transformação: novas variáveis (atraso, atrasado, rota, distância, recortes temporais)
