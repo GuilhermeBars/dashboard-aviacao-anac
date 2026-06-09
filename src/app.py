@@ -508,13 +508,12 @@ def layout_exploracao() -> html.Div:
                 html.B("maioria dos voos chega no horário ou adiantada"),
                 " — o atraso é exceção (cauda), não regra (limiar de 15 min)."),
         secao("Geografia", "aeroportos de origem por volume de voos"),
-        # altura fixa no container: o mapa geo precisa de container dimensionado
-        # desde o início (senão o plotly erra a escala e não desenha). SEM
-        # responsive — ele causa um loop de resize que faz o mapa crescer.
-        dcc.Graph(id="g-mapa", style={"height": "540px"}, responsive=False),
-        insight("O ", html.B("Brasil voa pelo Sudeste"), ": Guarulhos e Congonhas "
-                "(SP) lideram, seguidos de Brasília, Galeão/Santos Dumont (RJ) e "
-                "Confins (BH). Poucos hubs concentram a maior parte dos voos."),
+        html.Div(className="grid-fim grid-fim-mapa", children=[
+            # altura fixa + responsive=False: o mapa geo precisa de container
+            # dimensionado desde o início e não pode crescer em loop
+            dcc.Graph(id="g-mapa", style={"height": "540px"}, responsive=False),
+            html.Div(id="g-mapa-info", className="coluna-lateral coluna-topo"),
+        ]),
     ])
 
 
@@ -594,6 +593,7 @@ def aplicar_filtros(grupos, tipo, regioes, meses):
     Output("g-dispersao", "figure"),
     Output("g-distribuicao", "figure"),
     Output("g-mapa", "figure"),
+    Output("g-mapa-info", "children"),
     Input("f-grupo", "value"),
     Input("f-tipo", "value"),
     Input("f-regiao", "value"),
@@ -605,7 +605,7 @@ def atualizar(grupos, tipo, regioes, meses, metrica):
     if len(d) == 0:
         v = fig_vazia()
         return (html.Div("Nenhum voo para os filtros."),
-                v, v, v, v, v, v, v)
+                v, v, v, v, v, v, v, "")
     d_real = d[~d["cancelado"]]
 
     # ----- KPIs do recorte -----
@@ -825,7 +825,30 @@ def atualizar(grupos, tipo, regioes, meses, metrica):
                          "Onde o Brasil voa em 2024: concentração geográfica (60 maiores aeroportos)")
     fig_mapa.update_layout(height=520)
 
-    return kpis, fig_evo, fig_rotas, fig_cia, fig_hm, fig_disp, fig_dist, fig_mapa
+    # ----- painel lateral do mapa (dinâmico): top aeroportos do recorte -----
+    n_aer = d["origem_icao"].nunique()
+    if len(mp):
+        top5 = mp.head(5)
+        share5 = top5["voos"].sum() / len(d) * 100
+        itens = [html.Div(className="mapa-top-item", children=[
+                    html.Span(r["aeroporto"], className="ti-nome"),
+                    html.Span(f"{fmt_milhar(r['voos'])} voos", className="ti-val")])
+                 for _, r in top5.iterrows()]
+        bloco_top = html.Div(className="mapa-top", children=[
+            html.Div("Maiores aeroportos de origem (no recorte)",
+                     className="mapa-top-tit"), *itens])
+    else:
+        share5, bloco_top = 0, html.Div()
+    mapa_info = [
+        insight("O ", html.B("Brasil voa pelo Sudeste"), ": no recorte são ",
+                html.B(f"{n_aer} aeroportos"), " de origem, e os ",
+                html.B(f"5 maiores concentram {share5:.0f}%"), " dos voos — "
+                "poucos hubs dominam a malha."),
+        bloco_top,
+    ]
+
+    return (kpis, fig_evo, fig_rotas, fig_cia, fig_hm, fig_disp, fig_dist,
+            fig_mapa, mapa_info)
 
 
 if __name__ == "__main__":

@@ -182,8 +182,32 @@ body {
     justify-content: center;
     gap: 16px;
 }
+.coluna-topo { justify-content: flex-start; padding-top: 4px; }
 .coluna-lateral .insight-box,
 .coluna-lateral .rodape-insight { margin: 0; }
+
+/* Mapa (D2) com mais largura que a coluna de info */
+.grid-fim-mapa { grid-template-columns: 1.7fr 1fr; }
+
+/* Lista de maiores aeroportos no painel do mapa */
+.mapa-top {
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    box-shadow: var(--sombra);
+    padding: 14px 18px;
+}
+.mapa-top-tit {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--tinta-2); margin-bottom: 6px;
+}
+.mapa-top-item {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 6px 0; border-bottom: 1px solid #F0F2F5; font-size: 13.5px;
+}
+.mapa-top-item:last-child { border-bottom: none; }
+.ti-nome { color: var(--tinta); }
+.ti-val { color: var(--cinza); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* ---- Caixa de Insight (comunica o achado de cada seção) ---- */
 .insight-box {
@@ -295,6 +319,6 @@ body {
 
 /* ---- Responsividade ---- */
 @media (max-width: 1100px) {
-    .grid-2, .grid-fim { grid-template-columns: 1fr; }
+    .grid-2, .grid-fim, .grid-fim-mapa { grid-template-columns: 1fr; }
     .filtros { grid-template-columns: 1fr 1fr; }
 }
