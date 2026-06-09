@@ -36,7 +36,7 @@ from dash import Dash, dcc, html, Input, Output
 # ---------------------------------------------------------------------------
 
 COR_AZUL = "#1F77B4"
-COR_LATAM = "#8E44AD"
+COR_LATAM = "#D62728"   # vermelho (cor de marca da LATAM)
 COR_GOL = "#E67E22"
 COR_DESTAQUE = "#1A5276"
 COR_NEGATIVO = "#C0392B"
@@ -177,6 +177,15 @@ def secao(titulo: str, sub: str = "") -> html.Div:
     return html.Div(className="secao", children=filhos)
 
 
+def insight(*conteudo) -> html.Div:
+    """Caixa que COMUNICA o insight da seção (interpreta o padrão, não só mostra
+    o gráfico). Aceita texto e elementos (ex.: html.B para destacar números)."""
+    return html.Div(className="insight-box", children=[
+        html.Span("Insight", className="insight-tag"),
+        html.Div(list(conteudo), className="insight-txt"),
+    ])
+
+
 def fig_vazia(msg="Sem dados para os filtros selecionados") -> go.Figure:
     fig = go.Figure()
     fig.add_annotation(text=msg, showarrow=False,
@@ -260,13 +269,18 @@ def fig_market_share() -> go.Figure:
     dom = df[df["tipo_voo"].eq("Doméstico")].copy()
     g3 = ["Azul", "LATAM", "Gol"]
     dom["cat"] = np.where(dom["grupo"].isin(g3), dom["grupo"], "Outras")
-    ordem = ["Azul", "LATAM", "Gol", "Outras"]
+    # Barra horizontal no lugar de pizza (Storytelling with Data evita pizza);
+    # ordem ascendente para a líder (Azul) ficar no topo.
+    ordem = ["Outras", "Gol", "LATAM", "Azul"]
     g = (dom["cat"].value_counts(normalize=True) * 100).reindex(ordem)
-    fig = go.Figure(go.Pie(
-        labels=ordem, values=g.values, hole=0.55,
-        marker=dict(colors=[GRUPO_CORES.get(x, COR_NEUTRO) for x in ordem]),
-        textinfo="label+percent", sort=False, domain=dict(x=[0.0, 0.58]),
-        hovertemplate="%{label}: %{value:.1f}%<extra></extra>"))
+    fig = go.Figure(go.Bar(
+        x=g.values, y=ordem, orientation="h",
+        marker_color=[GRUPO_CORES.get(x, COR_NEUTRO) for x in ordem],
+        text=[f"{v:.1f}%" for v in g.values], textposition="outside",
+        hovertemplate="%{y}: %{x:.1f}% do mercado doméstico<extra></extra>"))
+    fig.update_xaxes(title="% do mercado doméstico", ticksuffix="%",
+                     range=[0, 48], domain=[0.0, 0.6])
+    fig.update_yaxes(automargin=True)
 
     # "Outras" reúne dezenas de companhias menores — mostra exemplos no cantinho
     out = dom[~dom["grupo"].isin(g3)]["empresa"]
@@ -366,13 +380,23 @@ def layout_visao_geral() -> html.Div:
             dcc.Graph(figure=fig_evolucao_mensal()),
             dcc.Graph(figure=fig_market_share()),
         ]),
+        insight("Azul, LATAM e Gol concentram ", html.B("~95% do mercado doméstico"),
+                " (Azul 40%, LATAM 30%, Gol 25%) — um oligopólio. O volume tem ",
+                html.B("picos em julho e no fim de ano"), " e vale em fevereiro."),
         secao("Pontualidade e principais hubs", "quem atrasa mais e por onde o país voa"),
         html.Div(className="grid-2", children=[
             dcc.Graph(figure=fig_pontualidade_grupos()),
             dcc.Graph(figure=fig_top_aeroportos()),
         ]),
+        insight("A ", html.B("Azul é a maior em volume, mas a menos pontual"),
+                " das três (16,7% de atrasos, contra ~14,5% de Gol e LATAM): voa "
+                "para mais aeroportos regionais. O movimento se concentra no ",
+                html.B("Sudeste"), " — São Paulo, Brasília, Rio e BH lideram."),
         secao("Composição da operação", "tipos de linha operados em 2024"),
         dcc.Graph(figure=fig_tipo_linha()),
+        insight("A operação é quase toda de ", html.B("passageiros (~95%)"),
+                "; a carga aérea responde por cerca de 4% dos voos, e o doméstico "
+                "domina sobre o internacional."),
         html.Div(className="rodape-insight", children=[
             html.B("Leitura rápida: "),
             "três companhias (Gol, Azul e LATAM) concentram a quase totalidade "
@@ -458,21 +482,33 @@ def layout_exploracao() -> html.Div:
             dcc.Graph(id="g-evolucao"),
             dcc.Graph(id="g-rotas"),
         ]),
+        insight("No ano, o volume é estável e as ", html.B("rotas mais movimentadas "
+                "ligam o eixo Rio–São Paulo–Brasília"), " (a ponte aérea). Use os "
+                "filtros para comparar companhias, regiões e períodos."),
         secao("Pontualidade", "quem mais atrasa e quando os atrasos acontecem"),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-atraso-cia"),
             dcc.Graph(id="g-heatmap"),
         ]),
+        insight("Os atrasos ", html.B("se acumulam ao longo do dia"), " (efeito "
+                "cascata): a madrugada é o melhor momento (~10%) e a ",
+                html.B("tarde/noite o pior, com pico em quinta e sexta"), "."),
         secao("Padrões de atraso", "relação com a distância e distribuição dos atrasos"),
         html.Div(className="grid-2", children=[
             dcc.Graph(id="g-dispersao"),
             dcc.Graph(id="g-distribuicao"),
         ]),
+        insight("Rotas mais longas tendem a atrasar mais, mas a ",
+                html.B("maioria dos voos chega no horário ou adiantada"),
+                " — o atraso é exceção (cauda), não regra (limiar de 15 min)."),
         secao("Geografia", "aeroportos de origem por volume de voos"),
         # altura explícita + responsive: o mapa geo precisa de container dimensionado
         # desde o início (senão o plotly erra a escala e não desenha)
         dcc.Graph(id="g-mapa", style={"height": "540px"},
                   config={"responsive": True}),
+        insight("O ", html.B("Brasil voa pelo Sudeste"), ": Guarulhos e Congonhas "
+                "(SP) lideram, seguidos de Brasília, Galeão/Santos Dumont (RJ) e "
+                "Confins (BH). Poucos hubs concentram a maior parte dos voos."),
     ])
 
 
@@ -699,19 +735,34 @@ def atualizar(grupos, tipo, regioes, meses, metrica):
                n=("rota", "size")).query("n >= 100").reset_index())
     if len(rr):
         rr["rota_nome"] = rr["rota"].map(rota_legivel)
+        # Cor estratégica (Storytelling with Data): destaca só as rotas que
+        # atrasam (vermelho) contra as no horário (cinza) — sem arco-íris e
+        # acessível a daltônicos. O eixo Y já carrega a magnitude do atraso.
+        rr["status"] = np.where(rr["atraso"] > 15, "Atrasada (>15 min)", "No horário")
         fig_disp = px.scatter(
-            rr, x="dist", y="atraso", size="n", size_max=40,
-            color="atraso", color_continuous_scale="RdYlGn_r",
+            rr, x="dist", y="atraso", size="n", size_max=40, opacity=0.75,
+            color="status",
+            color_discrete_map={"Atrasada (>15 min)": COR_NEGATIVO,
+                                "No horário": "#AEB6BF"},
+            category_orders={"status": ["No horário", "Atrasada (>15 min)"]},
             custom_data=["rota_nome", "n"],
             labels={"dist": "Distância da rota (km)",
-                    "atraso": "Atraso médio (min)", "n": "Voos"})
+                    "atraso": "Atraso médio (min)", "status": ""})
         fig_disp.update_traces(
             hovertemplate="<b>%{customdata[0]}</b><br>Distância: %{x:.0f} km<br>"
                           "Atraso médio: %{y:.1f} min<br>%{customdata[1]:,} voos<extra></extra>")
+        fig_disp.add_hline(y=15, line_dash="dot", line_color=COR_NEGATIVO,
+                           annotation_text="limiar 15 min",
+                           annotation_position="top left")
+        fig_disp.update_layout(legend=dict(orientation="h", y=1.0, x=0,
+                                           yanchor="bottom", title_text="",
+                                           font=dict(size=12)))
     else:
         fig_disp = fig_vazia()
     fig_disp = estilizar(fig_disp,
                          "Distância × atraso em 2024: rotas mais longas tendem a atrasar mais")
+    # espaço no topo p/ título e legenda não se sobreporem
+    fig_disp.update_layout(margin=dict(t=86))
 
     # ----- 6) Distribuição dos atrasos na chegada (histograma) -----
     # Pré-agrega no servidor (np.histogram) p/ não enviar ~1M de pontos ao browser.
